@@ -1,7 +1,6 @@
 import os
 import subprocess
-from queue import Queue
-from typing import Callable
+from typing import Callable, Any
 
 from commands import CodeCompiler, ExeRunner
 
@@ -14,15 +13,18 @@ class Checker:
         self.compiler = compiler
         self.runner = runner
 
-        self.check_queue = Queue()
+        self.check_queue = []
 
-    def push_check(self, filename: str, on_checked_func: Callable[[dict], None]):
-        self.check_queue.put((filename, on_checked_func))
+    def push_check(self, filename: str, on_checked_func: Callable[[dict], None]) -> None:
+        self.check_queue.append((filename, on_checked_func))
 
-    def listen(self):
+    def listen(self) -> None:
         while True:
-            if not self.check_queue.empty():
-                filename, on_checked = self.check_queue.get()
+            if len(self.check_queue) > 0:
+                filename, on_checked = self.check_queue[0]
+                result = self.check(filename)
+                on_checked(result)
+                del self.check_queue[0]
 
-    def check(self, code_file: str):
+    def check(self, code_file: str) -> dict[str, Any]:
         pass

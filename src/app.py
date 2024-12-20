@@ -6,3 +6,4 @@ if __name__ == "__main__":
     pl = PackLoader('../tests', '.test', 'in', 'out')
     print(pl.load_bytes(0))
     print(pl.load_bytes(1))
+    print(pl.load_bytes(2))
