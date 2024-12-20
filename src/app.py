@@ -1,5 +1,3 @@
-import subprocess
-
 def asdfadf(filename: str):
     print(filename)
 
