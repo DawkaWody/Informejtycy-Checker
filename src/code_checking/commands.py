@@ -1,6 +1,5 @@
 import subprocess
 from os.path import join
-from subprocess import run
 
 
 class CodeCompiler:
@@ -9,7 +8,7 @@ class CodeCompiler:
 
     def compile(self, file_path: str, program_id: int) -> None:
         command = self.compiler + ' ' + file_path + ' -o ' + str(program_id)
-        run(command, shell=True)
+        subprocess.run(command, shell=True)
 
 
 class ExeRunner:
