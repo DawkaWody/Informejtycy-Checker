@@ -10,5 +10,5 @@ def asdfadf(filename: str):
     print(filename)
 
 if __name__ == "__main__":
-    server = Server("localhost")
+	server = Server("localhost")
 	server.run()
