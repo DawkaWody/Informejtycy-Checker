@@ -1,5 +1,6 @@
 import socket
 import threading
+from uuid import uuid4
 from os.path import exists as fExists
 
 class Color:
@@ -30,19 +31,32 @@ class Server():
 		request_content = request_line.split('\r\n')
 		file_content = ""
 		
+		problem_name = ""
+		problem_name_included = False
 		creating_file = False
 		for i in request_content:
 			if i == '' and not creating_file:
 				creating_file = True
-			
-			if creating_file:
+				
+			elif creating_file:
 				file_content += i+'\n'
+			
+			elif i[0:7] == "Problem":
+				problem_name = i[9:]
+				print(problem_name)
+				problem_name_included = True
 		
-		with open("received/received.cpp", "w") as f:
+		if not problem_name_included:
+			print(f"{Color.error}ERROR:{Color.normal} Request didn't include problem name")
+			return ""
+		
+		file_name = f"{problem_name}_{uuid4()}.cpp"
+		print(f"{Color.info}INFO:{Color.normal} Successfully received user submission for {problem_name}")
+		with open(f"received/{file_name}", "w") as f:
 			f.write(file_content)
-		print(f"{Color.info}INFO:{Color.normal} Successfully received user submission")
+		print(f"{Color.info}INFO:{Color.normal} Created file: {file_name}")
 		
-		self.send_response_202(client_socket, "success")
+		self.send_response_202(client_socket, problem_name)
 	
-	def send_response_202(self, s: socket.socket, response: str) -> None:
-		s.send(("HTTP/1.1 202 Accepted\nContent-Type: text/plain\n\n"+response).encode("utf-8"))
+	def send_response_202(self, s: socket.socket, problem_name: str) -> None:
+		s.send((f"HTTP/1.1 202 Accepted\nProblem: {problem_name}\n\n").encode("utf-8"))
