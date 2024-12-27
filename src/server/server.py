@@ -43,7 +43,6 @@ class Server():
 			
 			elif i[0:7] == "Problem":
 				problem_name = i[9:]
-				print(problem_name)
 				problem_name_included = True
 		
 		if not problem_name_included:
