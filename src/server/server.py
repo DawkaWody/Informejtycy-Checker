@@ -3,7 +3,7 @@ import threading
 
 class Color:
 	error = "\033[38:5:160m"
-	normal = "\033[38:5:7m"
+	normal = "\033[0m"
 	info = "\033[38:5:27m"
 
 class Server():
@@ -31,9 +31,9 @@ class Server():
 		
 		creating_file = False
 		for i in request_content:
-			if i == '' and not creating_file:
+			if i == '' and creating_file:
 				creating_file = True
 			
 			if creating_file:
-				file_content += i
+				file_content += i+'\n'
 		print(file_content)
