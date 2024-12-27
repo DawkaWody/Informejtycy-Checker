@@ -31,7 +31,7 @@ class Server():
 		
 		creating_file = False
 		for i in request_content:
-			if i == '' and creating_file:
+			if i == '' and not creating_file:
 				creating_file = True
 			
 			if creating_file:
