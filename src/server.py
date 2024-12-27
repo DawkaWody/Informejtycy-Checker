@@ -6,7 +6,7 @@ class Server():
 		self.host = host
 		self.port = port
 		self.directory = directory
-		self.server_socket = socket.create_server((self.host, self.port), reuse_port = True)
+		self.server_socket = socket.create_server((self.host, self.port))
 	
 	def run(self) -> None:
 		print(f"Server is running {self.host}:{self.port}")
