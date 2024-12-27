@@ -27,4 +27,4 @@ class Server():
 			elif content and ':' in content:
 				key, val = content.split(": ")
 				headers[key] = val
-		print("Request content: {request_content}")
+		print(f"Request content: {request_content}")
