@@ -23,7 +23,7 @@ class Server():
 	def handle_request(self, client_socket, client_address) -> str:
 		request_line = client_socket.recv(1024).decode()
 		if request_line[0:4] != "POST":
-			print(f"{Color.error}ERROR:{Color.normal} invalid request send")
+			print(f"{Color.error}ERROR:{Color.normal} Invalid request send")
 			return ""
 		
 		request_content = request_line.split('\r\n')
