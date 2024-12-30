@@ -9,5 +9,5 @@ if __name__ == "__main__":
     # print(pl.load_bytes(0))
     # print(pl.load_bytes(1))
     # print(pl.load_bytes(2))
-    server = Server(asdf)
+    server = Server(received_file)
     server.run()
