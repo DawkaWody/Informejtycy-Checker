@@ -3,8 +3,8 @@ import threading
 from typing import Callable, Any
 from uuid import uuid4
 
-import src.server.file_manager as file_manager
-from src.server.color import Color
+import server.file_manager as file_manager
+from server.color import Color
 from . import IP, PORT, RECEIVED_DIR
 
 
@@ -53,8 +53,13 @@ class Server:
 			print(f"{Color.error}ERROR:{Color.normal} Request didn't include problem name. Please add 'Problem: id' header")
 			self.send_response_400(client_socket, "\"Problem\" header is missing")
 			return
-
-		problem_id = int(problem_id)
+		
+		try:
+			problem_id = int(problem_id)
+		except:
+			print(f"{Color.error}ERROR:{Color.normal} 'Problem' header didn't contain integer value")
+			self.send_response_400(client_socket, "\"id\" in \"Problem: id\" header must be an integer")
+			return
 
 		print(f"{Color.info}INFO:{Color.normal} Successfully received user submission for {problem_id}")
 
