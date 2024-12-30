@@ -8,7 +8,7 @@ from server.logger import Logger
 from . import IP, PORT, RECEIVED_DIR
 
 class Server:
-	def __init__(self, on_received: Callable[[str], Any], ) -> None:
+	def __init__(self, on_received: Callable[[str], None]) -> None:
 		self.host = IP
 		self.port = PORT
 		self.server_socket = socket.create_server((self.host, self.port))
