@@ -1,6 +1,6 @@
 from server.server import Server
 
-def asdf(filename):
+def received_file(filename: str) -> None:
     print(filename)
 
 if __name__ == "__main__":
