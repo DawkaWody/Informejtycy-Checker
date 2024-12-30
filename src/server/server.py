@@ -7,7 +7,6 @@ import server.file_manager as file_manager
 from server.color import Color
 from . import IP, PORT, RECEIVED_DIR
 
-
 class Server:
 	def __init__(self, on_received: Callable[[str], Any], ) -> None:
 		self.host = IP
