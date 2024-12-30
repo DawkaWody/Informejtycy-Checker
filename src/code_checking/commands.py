@@ -2,19 +2,12 @@ import subprocess
 from os.path import join
 
 
-class CodeCompiler:
-    def __init__(self, compiler: str):
+class Compiler:
+    def __init__(self, compiler: str, input_dir: str, output_dir: str):
         self.compiler = compiler
+        self.input_dir = input_dir
+        self.output_dir = output_dir
 
-    def compile(self, file_path: str, program_id: int) -> None:
-        command = self.compiler + ' ' + file_path + ' -o ' + str(program_id)
+    def compile(self, filename: str) -> None:
+        command = self.compiler + ' ' + join(self.input_dir, filename) + ' -o ' + join(self.output_dir, filename)
         subprocess.run(command, shell=True)
-
-
-class ExeRunner:
-    def __init__(self, exe_dir_path: str):
-        self.exe_dir_path = exe_dir_path
-
-    def run(self, file: str, readable_input) -> bytes:
-        output = subprocess.check_output(join(self.exe_dir_path, file), stdin=readable_input, shell=True)
-        return output
