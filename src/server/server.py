@@ -4,7 +4,7 @@ from typing import Callable, Any
 from uuid import uuid4
 
 import server.file_manager as file_manager
-from server.color import Color
+from server.logger import Logger
 from . import IP, PORT, RECEIVED_DIR
 
 class Server:
@@ -12,12 +12,14 @@ class Server:
 		self.host = IP
 		self.port = PORT
 		self.server_socket = socket.create_server((self.host, self.port))
+		
+		self.logger = Logger()
 
 		self.on_received = on_received
 		self.received_directory = RECEIVED_DIR
 	
 	def run(self) -> None:
-		print(f"{Color.info}INFO:{Color.normal} Server is running {self.host}:{self.port}")
+		self.logger.log(f"Server is running {self.host}:{self.port}")
 		while True:
 			client_socket, client_address = self.server_socket.accept()
 			thread = threading.Thread(target=self.handle_request, args=(client_socket, client_address))
@@ -27,7 +29,7 @@ class Server:
 		request_line = client_socket.recv(1024).decode()
 
 		if request_line[0:4] != "POST":
-			print(f"{Color.error}ERROR:{Color.normal} Invalid request send")
+			self.logger.error("Invalid request send")
 			self.send_response_405(client_socket, "Only POST method available")
 			return
 
@@ -49,23 +51,23 @@ class Server:
 				problem_name_included = True
 
 		if not problem_name_included:
-			print(f"{Color.error}ERROR:{Color.normal} Request didn't include problem name. Please add 'Problem: id' header")
+			self.logger.error("Request didn't include problem name. Please add 'Problem: id' header")
 			self.send_response_400(client_socket, "\"Problem\" header is missing")
 			return
 		
 		try:
 			problem_id = int(problem_id)
 		except:
-			print(f"{Color.error}ERROR:{Color.normal} 'Problem' header didn't contain integer value")
+			self.logger.error("'Problem' header didn't contain integer value")
 			self.send_response_400(client_socket, "\"id\" in \"Problem: id\" header must be an integer")
 			return
 
-		print(f"{Color.info}INFO:{Color.normal} Successfully received user submission for {problem_id}")
+		self.logger.log(f"Successfully received user submission for {problem_id}")
 
 		file_name = f"{problem_id}_{uuid4()}.cpp"
 		file_manager.write_file(self.received_directory, file_name, file_content)
 
-		print(f"{Color.info}INFO:{Color.normal} Created file: {file_name}")
+		self.logger.log(f"Created file: {file_name}")
 
 		self.send_response_202(client_socket, problem_id, f"Successfully received '{problem_id}'")
 
