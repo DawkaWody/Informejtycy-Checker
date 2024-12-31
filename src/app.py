@@ -1,7 +1,7 @@
 from server.server import Server
 
 def received_file(filename: str) -> None:
-    print(filename)
+    print(f"Received {filename}, should be in ../received/{filename[0:7]}...")
 
 if __name__ == "__main__":
     # from pack_loader import PackLoader
