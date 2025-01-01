@@ -5,7 +5,7 @@ from typing import Callable, Any
 from uuid import uuid4
 
 import server.file_manager as file_manager
-from server.logger import Logger
+from .logger import Logger
 from . import IP, PORT, RECEIVED_DIR, REQUEST_LIMIT, REQUEST_TIME_PERIOD_SECONDS
 
 class Server:
@@ -61,7 +61,7 @@ class Server:
 				problem_name_included = True
 
 		if not problem_name_included:
-			self.logger.error("Request didn't include problem name. Please add 'Problem: id' header")
+			self.logger.error("Request didn't include problem id. Please add 'Problem: id' header")
 			self.send_response_400(client_socket, "\"Problem\" header is missing")
 			return
 		

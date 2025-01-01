@@ -2,8 +2,8 @@ import os
 import subprocess
 from typing import Callable, Any
 
-from commands import Compiler
-from pack_loader import PackLoader
+from .commands import Compiler
+from .pack_loader import PackLoader
 
 
 class Checker:
@@ -15,7 +15,7 @@ class Checker:
 
         self.check_queue = []
 
-    def push_check(self, filename: str, ex_id:int, on_checked_func: Callable[[dict], None]) -> None:
+    def push_check(self, filename: str, ex_id: int, on_checked_func: Callable[[dict], None]) -> None:
         self.check_queue.append((filename, ex_id, on_checked_func))
 
     def listen(self) -> None:
@@ -27,10 +27,19 @@ class Checker:
                 del self.check_queue[0]
 
     def check(self, code_file: str, ex_id: int) -> dict[str, Any]:
-        result = {}
+        result = {"%": None, "first_failed": None}
+        score = 0
         self.compiler.compile(code_file)
-        for i, test_in, test_out in enumerate(self.pack_loader.load_bytes(ex_id)):
+        test_pack = self.pack_loader.load_bytes(ex_id)
+        for test_in, test_out in test_pack:
             data, write = os.pipe()
             os.write(write, test_in)
             o = subprocess.check_output(os.path.join(self.compiled_dir, code_file), stdin=data, shell=True)
-            result[i] = o == test_out
+            if o == test_out:
+                score += 1
+            else:
+                result["first_failed"] = test_in
+                break
+
+        result["%"] = score / len(test_pack)
+        return result
