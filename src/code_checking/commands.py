@@ -2,6 +2,7 @@ import subprocess
 from os.path import join
 import os
 
+
 class Compiler:
     def __init__(self, compiler: str, input_dir: str, output_dir: str):
         self.compiler = compiler

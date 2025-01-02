@@ -32,15 +32,12 @@ class Checker:
 		program = self.compiler.compile(code_file)
 		test_pack = self.pack_loader.load_bytes(ex_id)
 		for test_in, test_out in test_pack:
-			data, write = os.pipe()
-			os.write(write, test_in)
-			#print(os.path.join(self.compiled_dir, program))
-			o = subprocess.check_output('"'+os.path.join(self.compiled_dir, program)+'"', input=test_in, shell=True)
+			o = subprocess.check_output('"' + os.path.join(self.compiled_dir, program) + '"', input=test_in, shell=True)
 			if o.decode()[:-1] == test_out.decode():
 				score += 1
-			else:
+			elif result["first_failed"] is None:
 				result["first_failed"] = test_in
-				break
 
-		result["%"] = score / len(test_pack)
+		os.remove(os.path.join(self.compiled_dir, program))
+		result["%"] = (score / len(test_pack)) * 100
 		return result
