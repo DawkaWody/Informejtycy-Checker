@@ -29,12 +29,13 @@ class Checker:
     def check(self, code_file: str, ex_id: int) -> dict[str, Any]:
         result = {"%": None, "first_failed": None}
         score = 0
-        self.compiler.compile(code_file)
+        program = self.compiler.compile(code_file)
         test_pack = self.pack_loader.load_bytes(ex_id)
         for test_in, test_out in test_pack:
             data, write = os.pipe()
             os.write(write, test_in)
-            o = subprocess.check_output(os.path.join(self.compiled_dir, code_file), stdin=data, shell=True)
+            print(os.path.join(self.compiled_dir, program))
+            o = subprocess.check_output(os.path.join(self.compiled_dir, program), stdin=data, shell=True)
             if o == test_out:
                 score += 1
             else:

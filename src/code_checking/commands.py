@@ -8,6 +8,8 @@ class Compiler:
         self.input_dir = input_dir
         self.output_dir = output_dir
 
-    def compile(self, filename: str) -> None:
-        command = self.compiler + ' ' + join(self.input_dir, filename) + ' -o ' + join(self.output_dir, filename)
+    def compile(self, filename: str) -> str:
+        target_filename = filename[:-3] + 'out'  # file.cpp -> file.out
+        command = self.compiler + ' ' + join(self.input_dir, filename) + ' -o ' + join(self.output_dir, target_filename)
         subprocess.run(command, shell=True)
+        return target_filename

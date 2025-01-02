@@ -18,7 +18,7 @@ if __name__ == "__main__":
     checker = Checker(compiler, pl)
     lt = Thread(target=checker.listen)
     lt.start()
-    checker.push_check('1_21a7ddd5-756e-4970-8f92-53c40177bc60', 1, print_stats)
+    checker.push_check('0_a1ce0081-caff-426c-80ff-cd390683e5d1.cpp', 0, print_stats)
 
     server = Server(received_file)
     server.run()
