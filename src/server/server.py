@@ -8,13 +8,14 @@ import server.file_manager as file_manager
 from .logger import Logger
 from . import IP, PORT, RECEIVED_DIR, REQUEST_LIMIT, REQUEST_TIME_PERIOD_SECONDS
 
+
 class Server:
-	def __init__(self, on_received: Callable[[str], None]) -> None:
+	def __init__(self, on_received: Callable[[str], None], logger: Logger) -> None:
 		self.host = IP
 		self.port = PORT
 		self.server_socket = socket.create_server((self.host, self.port))
 		
-		self.logger = Logger()
+		self.logger = logger
 
 		self.on_received = on_received
 		self.received_directory = RECEIVED_DIR

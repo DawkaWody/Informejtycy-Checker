@@ -2,6 +2,7 @@ import threading
 import time
 from . import REQUEST_LIMIT, REQUEST_TIME_PERIOD_SECONDS
 
+
 class Logger:
 	color_NORMAL = "\033[0m"         # For setting color back to normal
 	color_INFO = "\033[38:5:27m"     # For reporting about server activites
@@ -9,11 +10,10 @@ class Logger:
 	color_WARNING = "\033[38:5:99m"  # For file submission problems, in which server continues file submission
 	color_ALERT = "\033[38:5:214m"   # For server problems, in which server continues file submission
 	
-	def __init__(self) -> None:
+	def start_log_cleaner(self) -> None:
 		self.request_logs: dict[str: int] = {}   # ip: requests_left
 		self.request_log_lock = threading.Lock() # for avoiding conflict usage of request_logs
-	
-	def start_log_cleaner(self) -> None:
+		
 		self.info(f"Request log cleaner is running (MAX {REQUEST_LIMIT} requests/{REQUEST_TIME_PERIOD_SECONDS} seconds)")
 		log_cleaning_thread = threading.Thread(target=self.clear_request_logs, daemon=True)
 		log_cleaning_thread.start()

@@ -1,4 +1,5 @@
 from server.server import Server
+from server.logger import Logger
 from code_checking.pack_loader import PackLoader
 from code_checking.checker import Checker
 from code_checking.commands import Compiler
@@ -8,15 +9,19 @@ def received_file(filename: str) -> None:
 	print(f"Received {filename}, should be in ../received/{filename[0:7]}...")
 
 def print_stats(result):
-	print("Accuracy: " + str(result["%"]) + "%")
+	global logger
+	logger.info(f"Accuracy: {result["%"]}%")
 
 if __name__ == "__main__":
+	logger = Logger()
+	
 	pl = PackLoader('../tests', '.test', 'in', 'out')
-	compiler = Compiler('g++', '../received/', '../received/compiled')
+	compiler = Compiler('g++', '../received/', '../received/compiled', logger)
 	checker = Checker(compiler, pl)
 	lt = Thread(target=checker.listen)
 	lt.start()
 	checker.push_check('0_a1ce0081-caff-426c-80ff-cd390683e5d1.cpp', 0, print_stats)
 
-	server = Server(received_file)
+	server = Server(received_file, logger)
 	server.run()
+	
