@@ -9,7 +9,7 @@ from . import IP, PORT, RECEIVED_DIR, REQUEST_LIMIT, REQUEST_TIME_PERIOD_SECONDS
 
 
 class Server:
-	def __init__(self, on_received: Callable[[str], None], logger: Logger) -> None:
+	def __init__(self, on_received: Callable[[str], None], problem_count: int, logger: Logger) -> None:
 		self.host = IP
 		self.port = PORT
 		self.server_socket = socket.create_server((self.host, self.port))
@@ -18,6 +18,8 @@ class Server:
 
 		self.on_received = on_received
 		self.received_directory = RECEIVED_DIR
+		
+		self.problem_count = problem_count
 	
 	def run(self) -> None:
 		self.logger.info(f"Server is running {self.host}:{self.port}")
@@ -71,7 +73,12 @@ class Server:
 			self.logger.error("'Problem' header didn't contain integer value")
 			self.send_response_400(client_socket, "\"id\" in \"Problem: id\" header must be an integer")
 			return
-
+		
+		if problem_id >= self.problem_count:
+			self.logger.error(f"Given problem {problem_id} doesn't exist")
+			self.send_response_400(client_socket, f"Requested problem {problem_id} in \"Problem: id\" header doesn't exist.")
+			return
+			
 		self.logger.info(f"Successfully received user submission for {problem_id}")
 
 		file_name = f"{problem_id}_{uuid4()}.cpp"

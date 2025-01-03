@@ -20,7 +20,7 @@ class Checker:
 
 		self.compiled_dir = self.compiler.output_dir
 
-		self.check_queue = []
+		self.check_queue: list[tuple[str, int, Callable[[dict], None]]] = []
 
 	def push_check(self, filename: str, ex_id: int, on_checked_func: Callable[[dict], None]) -> None:
 		"""
@@ -54,6 +54,7 @@ class Checker:
 		score = 0
 		program = self.compiler.compile(code_file)
 		test_pack = self.pack_loader.load_bytes(ex_id)
+		
 		for test_in, test_out in test_pack:
 			o = subprocess.check_output('"' + os.path.join(self.compiled_dir, program) + '"', input=test_in, shell=True)
 			if o.decode()[:-1] == test_out.decode():

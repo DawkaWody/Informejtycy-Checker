@@ -23,6 +23,6 @@ if __name__ == "__main__":
 	lt = Thread(target=checker.listen)
 	lt.start()
 
-	server = Server(received_file, logger)
+	server = Server(received_file, pl.get_problem_count(), logger)
 	server.run()
 	
