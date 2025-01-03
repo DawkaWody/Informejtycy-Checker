@@ -20,7 +20,7 @@ def print_stats(result, client: Client, problem_id: int):
 	
 	if result["compilation_error"]:
 		logger.error("Compilation error")
-		server.send_response_400(client.SOCKET, f"Compilation error occured.", "Compilation error: true\nResult percent: 0\n")
+		server.send_response_400(client.SOCKET, f"Compilation error occurred.", "Compilation error: true\nResult percent: 0\n")
 		return
 	
 	logger.info(f"Accuracy: {result["%"]}%")
