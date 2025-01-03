@@ -34,7 +34,11 @@ class PackLoader:
 		sorted(pack_files)
 		return pack_files
 	
-	def get_problem_count(self) -> int:
+	def get_pack_count(self) -> int:
+		"""
+		Returns the number of pack files in the pack directory.
+		:return: Number of pack files in the pack directory.
+		"""
 		return len(self.pack_files)
 
 	def load_bytes(self, index: int) -> tuple[bool, list[tuple[bytes, bytes]]]:

@@ -1,8 +1,7 @@
 import socket
 
 
-class Client():
-	
+class Client:
 	def __init__(self, client_socket: socket.socket, client_address: tuple[str, int]) -> None:
 		self.SOCKET = client_socket
 		self.IP = client_address[0]
