@@ -38,7 +38,7 @@ class PackLoader:
         """
         Loads the pack file from the list at specified index.
         :param index: index of the pack file in the list (starting from 0)
-        :return: tuple with the inputs at index 0 and with the outputs at index 1
+        :return: List of tuples with the inputs at index 0 and with the outputs at index 1
         """
         tests = []
         with zipfile.ZipFile(os.path.join(self.pack_dir_path, self.pack_files[index])) as pack:

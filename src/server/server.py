@@ -1,10 +1,9 @@
 import socket
 import threading
-import time
-from typing import Callable, Any
+from typing import Callable
 from uuid import uuid4
+from os.path import join
 
-import server.file_manager as file_manager
 from .logger import Logger
 from . import IP, PORT, RECEIVED_DIR, REQUEST_LIMIT, REQUEST_TIME_PERIOD_SECONDS
 
@@ -68,7 +67,7 @@ class Server:
 		
 		try:
 			problem_id = int(problem_id)
-		except:
+		except ValueError:
 			self.logger.error("'Problem' header didn't contain integer value")
 			self.send_response_400(client_socket, "\"id\" in \"Problem: id\" header must be an integer")
 			return
@@ -76,7 +75,8 @@ class Server:
 		self.logger.info(f"Successfully received user submission for {problem_id}")
 
 		file_name = f"{problem_id}_{uuid4()}.cpp"
-		file_manager.write_file(self.received_directory, file_name, file_content)
+		with open(join(self.received_directory, file_name), 'w') as f:
+			f.write(file_content)
 
 		self.logger.info(f"Created file: {file_name}")
 
