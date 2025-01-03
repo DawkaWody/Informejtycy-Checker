@@ -6,10 +6,10 @@ from os.path import join
 
 from .logger import Logger
 from . import IP, PORT, RECEIVED_DIR, REQUEST_LIMIT, REQUEST_TIME_PERIOD_SECONDS
-
+from .client import Client
 
 class Server:
-	def __init__(self, on_received: Callable[[str], None], problem_count: int, logger: Logger) -> None:
+	def __init__(self, on_received: Callable[[str, Client], None], problem_count: int, logger: Logger) -> None:
 		self.host = IP
 		self.port = PORT
 		self.server_socket = socket.create_server((self.host, self.port))
@@ -74,10 +74,10 @@ class Server:
 			self.send_response_400(client_socket, "\"id\" in \"Problem: id\" header must be an integer")
 			return
 		
-		if problem_id >= self.problem_count:
-			self.logger.error(f"Given problem {problem_id} doesn't exist")
-			self.send_response_400(client_socket, f"Requested problem {problem_id} in \"Problem: id\" header doesn't exist.")
-			return
+		# if problem_id >= self.problem_count:
+			# self.logger.error(f"Given problem {problem_id} doesn't exist")
+			# self.send_response_400(client_socket, f"Requested problem {problem_id} in \"Problem: id\" header doesn't exist.")
+			# return
 			
 		self.logger.info(f"Successfully received user submission for {problem_id}")
 
@@ -87,22 +87,20 @@ class Server:
 
 		self.logger.info(f"Created file: {file_name}")
 
-		self.send_response_202(client_socket, problem_id, f"Successfully received '{problem_id}'")
-
-		self.on_received(file_name)
+		self.on_received(file_name, Client(client_socket, client_address))
 
 	@staticmethod
-	def send_response_202(s: socket.socket, problem_id: int, response: str) -> None:
-		s.send(f"HTTP/1.1 202 Accepted\nContent-Type: text/plain\nContent-Length: {len(response)}\nProblem: {problem_id}\n\n{response}".encode("utf-8"))
+	def send_response_202(s: socket.socket, problem_id: int, response: str, extra_headers: str = "\n") -> None:
+		s.send(f"HTTP/1.1 202 Accepted\nContent-Type: text/plain\nContent-Length: {len(response)}\nProblem: {problem_id}\n{extra_headers}\n{response}".encode("utf-8"))
 
 	@staticmethod
-	def send_response_400(s: socket.socket, response: str) -> None:
-		s.send(f"HTTP/1.1 400 Bad Request\nContent-Type: text/plain\nContent-Length: {len(response)}\n\n{response}".encode("utf-8"))
+	def send_response_400(s: socket.socket, response: str, extra_headers: str = "\n") -> None:
+		s.send(f"HTTP/1.1 400 Bad Request\nContent-Type: text/plain\nContent-Length: {len(response)}\n{extra_headers}\n{response}".encode("utf-8"))
 
 	@staticmethod
-	def send_response_405(s: socket.socket, response: str) -> None:
-		s.send(f"HTTP/1.1 405 Method Not Allowed\nAllow: POST\nContent-Type: text/plain\nContent-Length: {len(response)}\n\n{response}".encode("utf-8"))
+	def send_response_405(s: socket.socket, response: str, extra_headers: str = "\n") -> None:
+		s.send(f"HTTP/1.1 405 Method Not Allowed\nAllow: POST\nContent-Type: text/plain\nContent-Length: {len(response)}\n{extra_headers}\n{response}".encode("utf-8"))
 
 	@staticmethod
-	def send_response_429(s: socket.socket, response: str) -> None:
-		s.send(f"HTTP/1.1 429 Too Many Requests\nRetry-After: {REQUEST_TIME_PERIOD_SECONDS}\nContent-Type: text/plain\nContent-Length: {len(response)}\n\n{response}".encode("utf-8"))
+	def send_response_429(s: socket.socket, response: str, extra_headers: str = "\n") -> None:
+		s.send(f"HTTP/1.1 429 Too Many Requests\nRetry-After: {REQUEST_TIME_PERIOD_SECONDS}\nContent-Type: text/plain\nContent-Length: {len(response)}\n{extra_headers}\n{response}".encode("utf-8"))
