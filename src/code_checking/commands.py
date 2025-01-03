@@ -29,5 +29,6 @@ class Compiler:
 		self.logger.info(f"Compiling... (file {filename})")
 		target_filename = filename[:-3] + 'out'	 # file.cpp -> file.out
 		command = self.compiler + ' "' + join(self.input_dir, filename) + '" -o "' + join(self.output_dir, target_filename) + '"'
-		subprocess.run(command, shell=True)
+		
+		subprocess.run(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 		return target_filename

@@ -1,6 +1,7 @@
 import os
 import subprocess
 from typing import Callable, Any
+from os.path import exists
 
 from .commands import Compiler
 from .pack_loader import PackLoader
@@ -54,6 +55,9 @@ class Checker:
 		score = 0
 		program = self.compiler.compile(code_file)
 		test_pack = self.pack_loader.load_bytes(ex_id)
+		
+		#if not exist('"'+os.path.join(self.compiled_dir, program)+'"'):
+		#	self.logg
 		
 		for test_in, test_out in test_pack:
 			o = subprocess.check_output('"' + os.path.join(self.compiled_dir, program) + '"', input=test_in, shell=True)
