@@ -31,4 +31,5 @@ class Compiler:
 		command = self.compiler + ' "' + join(self.input_dir, filename) + '" -o "' + join(self.output_dir, target_filename) + '"'
 		
 		subprocess.run(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		self.logger.info(f"Compiled {target_filename}")
 		return target_filename

@@ -1,10 +1,14 @@
 import os
+import multiprocessing
 import subprocess
 from typing import Callable, Any
 
+from server.client import Client
+
+from .time_limits import WallClock, TimeLimitExceeded
 from .commands import Compiler
 from .pack_loader import PackLoader
-from server.client import Client
+
 
 class Checker:
 	"""
@@ -55,7 +59,8 @@ class Checker:
 		"""
 		
 		score = 0
-		result = {"%": None, "first_failed": None, "compilation_error": False, "invalid_problem_id": False}
+		result = {"%": None, "first_failed": None, "time_limit_exceeded": False,
+				  "compilation_error": False, "invalid_problem_id": False}
 
 		if ex_id >= self.pack_loader.get_pack_count():
 			result["invalid_problem_id"] = True
@@ -68,13 +73,43 @@ class Checker:
 			return result
 		
 		test_pack = self.pack_loader.load_bytes(ex_id)
-		
+
 		for test_in, test_out in test_pack:
-			o = subprocess.check_output('"' + os.path.join(self.compiled_dir, program) + '"', input=test_in, shell=True)
-			if o.decode()[:-1] == test_out.decode():
-				score += 1
-			elif result["first_failed"] is None:
+			clock = WallClock(4)
+			return_v = {"program_output": None}
+			def get_output(command: str, input: bytes, queue: multiprocessing.Queue) -> None:
+				nonlocal clock
+				out = queue.get()
+				out["program_output"] = subprocess.check_output(command, input=input, shell=True)
+				queue.put(out)
+				clock.stop()
+
+			out_queue = multiprocessing.Queue(1)
+			out_queue.put(return_v)
+			program_process = multiprocessing.Process(target=get_output,
+													  args=('"' + os.path.join(self.compiled_dir, program) + '"',
+															test_in, out_queue))
+			program_process.start()
+			try:
+				clock.start(6)
+				program_process.join()
+				output = out_queue.get()["program_output"]
+
+			except subprocess.CalledProcessError:
 				result["first_failed"] = test_in
+				break
+
+			except TimeLimitExceeded:
+				program_process.kill()
+				result["time_limit_exceeded"] = True
+				result["first_failed"] = test_in
+				break
+
+			if output.decode()[:-1] == test_out.decode():
+				score += 1
+			else:
+				result["first_failed"] = test_in
+				break
 
 		os.remove(os.path.join(self.compiled_dir, program))
 		os.remove(os.path.join(self.compiler.input_dir, code_file))
