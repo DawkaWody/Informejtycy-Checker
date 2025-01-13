@@ -1,6 +1,7 @@
 import os
 import multiprocessing
 import subprocess
+from threading import Thread
 from typing import Callable, Any
 
 from server.client import Client
@@ -76,16 +77,12 @@ class Checker:
 
 		for test_in, test_out in test_pack:
 			clock = WallClock(4)
-			return_v = {"program_output": None}
 			def get_output(command: str, input: bytes, queue: multiprocessing.Queue) -> None:
 				nonlocal clock
-				out = queue.get()
-				out["program_output"] = subprocess.check_output(command, input=input, shell=True)
-				queue.put(out)
+				queue.put_nowait(subprocess.check_output(command, input=input, shell=True))
 				clock.stop()
 
-			out_queue = multiprocessing.Queue(1)
-			out_queue.put(return_v)
+			out_queue = multiprocessing.Queue()
 			program_process = multiprocessing.Process(target=get_output,
 													  args=('"' + os.path.join(self.compiled_dir, program) + '"',
 															test_in, out_queue))
