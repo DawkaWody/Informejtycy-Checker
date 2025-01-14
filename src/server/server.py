@@ -73,11 +73,6 @@ class Server:
 			self.logger.error("'Problem' header didn't contain integer value")
 			self.send_response_400(client_socket, "\"id\" in \"Problem: id\" header must be an integer")
 			return
-		
-		# if problem_id >= self.problem_count:
-			# self.logger.error(f"Given problem {problem_id} doesn't exist")
-			# self.send_response_400(client_socket, f"Requested problem {problem_id} in \"Problem: id\" header doesn't exist.")
-			# return
 			
 		self.logger.info(f"Successfully received user submission for {problem_id}")
 

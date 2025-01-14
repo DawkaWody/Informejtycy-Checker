@@ -1,6 +1,7 @@
 import os
-import multiprocessing
+import threading
 import subprocess
+from queue import Queue
 from threading import Thread
 from typing import Callable, Any
 
@@ -41,6 +42,7 @@ class Checker:
 		"""
 		Listens for new files in the checking queue. Should be called in a different thread.
 		"""
+		a = 0
 		while True:
 			if len(self.check_queue) > 0:
 				filename, client, ex_id, on_checked = self.check_queue[0]
@@ -77,20 +79,20 @@ class Checker:
 
 		for test_in, test_out in test_pack:
 			clock = WallClock(4)
-			def get_output(command: str, input: bytes, queue: multiprocessing.Queue) -> None:
+			def get_output(command: str, input: bytes, queue: Queue) -> None:
 				nonlocal clock
 				queue.put_nowait(subprocess.check_output(command, input=input, shell=True))
 				clock.stop()
-
-			out_queue = multiprocessing.Queue()
-			program_process = multiprocessing.Process(target=get_output,
+			
+			out_queue = Queue()
+			program_process = threading.Thread(target=get_output,
 													  args=('"' + os.path.join(self.compiled_dir, program) + '"',
 															test_in, out_queue))
 			program_process.start()
 			try:
 				clock.start(6)
 				program_process.join()
-				output = out_queue.get()["program_output"]
+				output = out_queue.get()#["program_output"]
 
 			except subprocess.CalledProcessError:
 				result["first_failed"] = test_in

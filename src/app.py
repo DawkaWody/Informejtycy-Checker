@@ -25,10 +25,10 @@ def print_stats(result, client: Client, problem_id: int):
 
 	if result["time_limit_exceeded"]:
 		logger.info("Time limit exceeded")
-		server.send_response_400(client.SOCKET, "Time limit exceeded", "Compilation error: false\nResult percent: 0\n")
+		server.send_response_400(client.SOCKET, "Time limit exceeded.", "Compilation error: false\nResult percent: 0\n")
 	
 	logger.info(f"Accuracy: {result["%"]}%")
-	server.send_response_202(client.SOCKET, problem_id, f"Successfully received '{problem_id}'", f"Compilation error: false\nResult percent: {result["%"]}\n")
+	server.send_response_202(client.SOCKET, problem_id, f"Successfully received '{problem_id}'.", f"Compilation error: false\nResult percent: {result["%"]}\n")
 
 if __name__ == "__main__":
 	logger = Logger()
