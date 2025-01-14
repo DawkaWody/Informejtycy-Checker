@@ -58,7 +58,7 @@ class PackLoader:
 				try:
 					in_test = pack.read(self.in_name + str(i + 1))
 					out_test = pack.read(self.out_name + str(i + 1))
-				except FileNotFoundError:
+				except KeyError:
 					raise WrongPackStructureError("Number of input files must match the number of output files.")
 				tests.append((in_test, out_test))
 
@@ -75,7 +75,7 @@ class PackLoader:
 		with zipfile.ZipFile(os.path.join(self.pack_dir_path, self.pack_files[index])) as pack:
 			try:
 				settings = pack.read(self.config_name).split()
-			except FileNotFoundError:
+			except KeyError:
 				raise WrongPackStructureError("Config file not present.")
 
 			conf["time_limit"] = int(settings[0])
