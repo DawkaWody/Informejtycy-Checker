@@ -33,7 +33,7 @@ def print_stats(result, client: Client, problem_id: int):
 if __name__ == "__main__":
 	logger = Logger()
 	
-	pl = PackLoader('../tests', '.test', 'in', 'out')
+	pl = PackLoader('../tests', '.test', 'in', 'out', 'CONFIG')
 	compiler = Compiler('g++', '../received', '../received/compiled', logger)
 	checker = Checker(compiler, pl)
 

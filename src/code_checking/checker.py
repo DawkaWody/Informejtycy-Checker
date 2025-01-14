@@ -1,13 +1,9 @@
 import os
-import threading
 import subprocess
-from queue import Queue
-from threading import Thread
 from typing import Callable, Any
 
 from server.client import Client
 
-from .time_limits import WallClock, TimeLimitExceeded
 from .commands import Compiler
 from .pack_loader import PackLoader
 
@@ -75,30 +71,17 @@ class Checker:
 			return result
 		
 		test_pack = self.pack_loader.load_bytes(ex_id)
+		pack_config = self.pack_loader.load_config(ex_id)
 
 		for test_in, test_out in test_pack:
-			clock = WallClock(4)
-			def get_output(command: str, input: bytes, queue: Queue) -> None:
-				nonlocal clock
-				queue.put_nowait(subprocess.check_output(command, input=input, shell=True))
-				clock.stop()
-			
-			out_queue = Queue()
-			program_process = threading.Thread(target=get_output,
-													  args=('"' + os.path.join(self.compiled_dir, program) + '"',
-															test_in, out_queue))
-			program_process.start()
 			try:
-				clock.start(6)
-				program_process.join()
-				output = out_queue.get()
-
+				output = subprocess.check_output(os.path.join(self.compiled_dir, program),
+												 input=test_in, timeout=pack_config['time_limit'])
 			except subprocess.CalledProcessError:
 				result["first_failed"] = test_in
 				break
 
-			except TimeLimitExceeded:
-				program_process.kill()
+			except subprocess.TimeoutExpired:
 				result["time_limit_exceeded"] = True
 				result["first_failed"] = test_in
 				break

@@ -6,7 +6,7 @@ class PackLoader:
 	"""
 	A class that loads test packs from a compressed archive.
 	"""
-	def __init__(self, pack_dir: str, pack_extension: str, in_name: str, out_name: str):
+	def __init__(self, pack_dir: str, pack_extension: str, in_name: str, out_name: str, config_name: str):
 		"""
 		:param pack_dir: Directory in which to search for packs.
 		:param pack_extension: File extension for a pack file.
@@ -17,6 +17,7 @@ class PackLoader:
 		self.pack_extension = pack_extension
 		self.in_name = in_name
 		self.out_name = out_name
+		self.config_name = config_name
 
 		self.pack_dir_path = os.path.abspath(self.pack_dir)
 		self.pack_files = self.get_all()
@@ -41,7 +42,7 @@ class PackLoader:
 		"""
 		return len(self.pack_files)
 
-	def load_bytes(self, index: int) -> tuple[bool, list[tuple[bytes, bytes]]]:
+	def load_bytes(self, index: int) -> list[tuple[bytes, bytes]]:
 		"""
 		Loads the pack file from the list at specified index.
 		:param index: index of the pack file in the list (starting from 0)
@@ -49,10 +50,38 @@ class PackLoader:
 		"""
 		
 		tests = []
+		if index >= self.get_pack_count():
+			raise IndexError("Pack doesn't exist")
+
 		with zipfile.ZipFile(os.path.join(self.pack_dir_path, self.pack_files[index])) as pack:
 			for i in range(int(len(pack.filelist) / 2)):
-				in_test = pack.read(self.in_name + str(i + 1))
-				out_test = pack.read(self.out_name + str(i + 1))
+				try:
+					in_test = pack.read(self.in_name + str(i + 1))
+					out_test = pack.read(self.out_name + str(i + 1))
+				except FileNotFoundError:
+					raise WrongPackStructureError("Number of input files must match the number of output files.")
 				tests.append((in_test, out_test))
 
 		return tests
+
+	def load_config(self, index: int) -> dict[str, int | None]:
+		"""
+		Loads the pack file settings from the list at specified index.
+		:param index:
+		:return:
+		"""
+		conf = {"time_limit": None, "memory_limit": None}
+
+		with zipfile.ZipFile(os.path.join(self.pack_dir_path, self.pack_files[index])) as pack:
+			try:
+				settings = pack.read(self.config_name).split()
+			except FileNotFoundError:
+				raise WrongPackStructureError("Config file not present.")
+
+			conf["time_limit"] = int(settings[0])
+
+		return conf
+
+
+class WrongPackStructureError(Exception):
+	pass
