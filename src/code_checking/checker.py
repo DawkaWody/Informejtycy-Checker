@@ -42,7 +42,6 @@ class Checker:
 		"""
 		Listens for new files in the checking queue. Should be called in a different thread.
 		"""
-		a = 0
 		while True:
 			if len(self.check_queue) > 0:
 				filename, client, ex_id, on_checked = self.check_queue[0]
@@ -92,7 +91,7 @@ class Checker:
 			try:
 				clock.start(6)
 				program_process.join()
-				output = out_queue.get()#["program_output"]
+				output = out_queue.get()
 
 			except subprocess.CalledProcessError:
 				result["first_failed"] = test_in
