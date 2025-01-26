@@ -2,8 +2,6 @@ import os
 import subprocess
 from typing import Callable, Any
 
-from server.client import Client
-
 from .commands import Compiler
 from .pack_loader import PackLoader
 
@@ -22,17 +20,17 @@ class Checker:
 
 		self.compiled_dir = self.compiler.output_dir
 
-		self.check_queue: list[tuple[str, Client, int, Callable[[dict, Client, int], None]]] = []
+		self.check_queue: list[tuple[str, int, str, Callable[[dict, str], None]]] = []
 
-	def push_check(self, filename: str, client: Client, ex_id: int, on_checked_func: Callable[[dict, Client, int], None]) -> None:
+	def push_check(self, filename: str, ex_id: int, auth: str, on_checked_func: Callable[[dict, str], None]) -> None:
 		"""
 		Push a file to the checking queue.
 		:param filename: Name of the file with source code that will be checked.
-		:param client: Socket, IP and PORT of the source code sender.
-		:param ex_id: ID of the exercise (problem header) for which the file will be checked.
+		:param ex_id: ID of problem, that is being compiled and runned.
+		:param auth: User authentication uuid4
 		:param on_checked_func: Function to execute when file checking is done.
 		"""
-		self.check_queue.append((filename, client, ex_id, on_checked_func))
+		self.check_queue.append((filename, ex_id, auth, on_checked_func))
 
 	def listen(self) -> None:
 		"""
@@ -40,29 +38,25 @@ class Checker:
 		"""
 		while True:
 			if len(self.check_queue) > 0:
-				filename, client, ex_id, on_checked = self.check_queue[0]
+				filename, ex_id, auth, on_checked = self.check_queue[0]
 				result = self.check(filename, ex_id)
-				on_checked(result, client, ex_id)
+				on_checked(result, auth)
 				del self.check_queue[0]
-				if result["invalid_problem_id"] or result["compilation_error"]:
+				if result["compilation_error"]:
 					os.remove(os.path.join(self.compiler.input_dir, filename))
 
 	def check(self, code_file: str, ex_id: int) -> dict[str, Any]:
 		"""
 		Compiles and checks the code file. The file after checking.
 		:param code_file: File with source code that needs to be checked.
-		:param ex_id: ID of the exercise (problem header) for which the file will be checked.
+		:param ex_id: ID of problem, that is being compiled and runned.
 		:return: Result dict containing "%" key with percentage of tests passed and
 		(if applies) "first_failed" with the first failed test.
 		"""
 		
 		score = 0
-		result = {"%": None, "first_failed": None, "time_limit_exceeded": False,
-				  "compilation_error": False, "invalid_problem_id": False}
-
-		if ex_id >= self.pack_loader.get_pack_count():
-			result["invalid_problem_id"] = True
-			return result
+		result = {"percent": None, "first_failed": None, "time_limit_exceeded": False,
+				  "compilation_error": False, "invalid_problem_id": False, "unauthorized": False}
 
 		program = self.compiler.compile(code_file)
 		
@@ -78,21 +72,21 @@ class Checker:
 				output = subprocess.check_output(os.path.join(self.compiled_dir, program),
 												 input=test_in, timeout=pack_config['time_limit'])
 			except subprocess.CalledProcessError:
-				result["first_failed"] = test_in
+				result["first_failed"] = test_in.decode("utf-8")
 				break
 
 			except subprocess.TimeoutExpired:
 				result["time_limit_exceeded"] = True
-				result["first_failed"] = test_in
+				result["first_failed"] = test_in.decode("utf-8")
 				break
 
 			if output.decode()[:-1] == test_out.decode():
 				score += 1
 			else:
-				result["first_failed"] = test_in
+				result["first_failed"] = test_in.decode("utf-8")
 				break
 
 		os.remove(os.path.join(self.compiled_dir, program))
 		os.remove(os.path.join(self.compiler.input_dir, code_file))
-		result["%"] = (score / len(test_pack)) * 100
+		result["percent"] = (score / len(test_pack)) * 100
 		return result

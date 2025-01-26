@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Demo website</title>
+</head>
+<body>
+	To jest demo do testowania wysyłania. Żeby uruchomić tę stronę, potrzebny jest moduł flask w pythonie.
+	Uruchom plik app.py i wejdź na adres http://127.0.0.1:5000. Kliknij "Submit Solution". Wynik sprawdzania
+	znajdzie się przez 10 sekund na stronie http://127.0.0.1:5000/status/auth gdzie auth to kod uuid wysłany
+	w odpowiedzi na kliknięcie przycisku.
+	</br>
+	<button id="submissionButton">Submit solution</button>
+	
+	<script>
+		async function submission() {
+			const response = await fetch("/submit", {
+					method: "POST",
+					headers: {
+						"content-type": "text/plain",
+						"Problem": "0"
+					},
+					body: `
+#include<iostream>
+using namespace std;
+int main()
+{
+	cout << 15 << endl;
+}
+				`
+			});
+			const data = response.json();
+			if (data.ok) {
+				const result = checkStatus(data.authorization);
+				console.log(result);
+			}
+		}
+	
+		async function checkStatus(auth) {
+			const url = "http://localhost:5000/status/${auth}";
+			while (true) {
+				const response = await fetch(statusUrl);
+				const data = await response.json();
+				
+				if (!data.unauthorized) {
+					return data.percent;
+				}
+				
+				await new Promise(resolve => setTimeout(resolve, 1000));
+			}
+		}
+		
+		document.getElementById("submissionButton").addEventListener("click", () => {
+			submission();
+		});
+	</script>
+</body>
+</html>
