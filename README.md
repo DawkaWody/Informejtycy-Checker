@@ -1,5 +1,7 @@
 # Informejtycy-Checker
 
+System sprawdzający rozwiązania do strony informejtycy.pl. W przyszłości będzie tu również debugger do strony informejtycy.pl.
+
 ### cURL-e do testów sprawdzarki
 ```curl
 curl --location '127.0.0.1:5000' \
