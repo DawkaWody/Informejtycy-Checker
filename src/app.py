@@ -63,7 +63,6 @@ with app.app_context():
 	lt2 = Thread(target=clean_results)
 	lt2.start()
 
-
 '''
 Flask & SocketIO functions
 '''
@@ -104,7 +103,7 @@ def send_index() -> tuple[str, int]:
 @app.route('/status/<auth>', methods=["GET"])
 def get_task_results(auth: str) -> tuple[str, int]:
 	with results_lock:
-		res = results.get(auth, ({"percent": None, "first_failed": None, "time_limit_exceeded": False, "compilation_error": False, "invalid_problem_id": False, "unauthorized": True},0))
+		res = results.get(auth, ({"percent": None, "first_failed": None, "time_limit_exceeded": False, "memory_limit_exceeded": False, "compilation_error": False, "invalid_problem_id": False, "unauthorized": True},0))
 		if not res[0]["unauthorized"]:
 			results.pop(auth)
 		return jsonify(res[0]), 200

@@ -1,6 +1,6 @@
 # Informejtycy-Checker
 
-System sprawdzający rozwiązania do strony informejtycy.pl. W przyszłości będzie tu również debugger do strony informejtycy.pl.
+System sprawdzający rozwiązania i debugger do strony informejtycy.pl
 
 ### cURL-e do testów sprawdzarki
 ```curl

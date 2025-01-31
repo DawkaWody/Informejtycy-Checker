@@ -1,0 +1,6 @@
+success = "Success"
+docker_build_error = "DockerBuildError"
+memory_limit_exceeded = "MemoryLimitExceeded"
+runtime_error = "RuntimeError"
+timeout = "Timeout"
+server_error = "ServerError"
