@@ -1,1 +1,1 @@
-Ten folder trzyma template'y, które flask ładuje automatycznie, przy pomocy `flask.render_template()`.
+Ten folder trzyma template'y (czyli strony `.html`), które flask ładuje automatycznie, przy pomocy `flask.render_template()`.
