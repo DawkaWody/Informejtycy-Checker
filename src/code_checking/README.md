@@ -1,0 +1,1 @@
+Ten folder zawiera kod do sprawdzarki, ładowarki paczek oraz programu zarządzającego kompilacją. Do jego poprawnego działania wymagany jest kompilator `g++` oraz kompilacja na linuksowy format plików `.exe`.
