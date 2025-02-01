@@ -1,27 +1,28 @@
 import os
 import time
+import eventlet
 from threading import Thread, Lock
-from flask import Flask, request, Response, jsonify, copy_current_request_context
+from flask import Flask, request, Response, jsonify, copy_current_request_context, render_template
 from flask_socketio import SocketIO, emit
 from uuid import uuid4
 
 from server import IP, PORT, RECEIVED_DIR, COMPILED_DIR, SECRET_KEY, RECEIVE_SUBMISSION_TIME
 from code_checking.checker import Checker
+from code_checking.check_result import CheckResult, UnauthorizedCheckResult
 from code_checking.pack_loader import PackLoader
 from code_checking.commands import Compiler
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
-socketio = SocketIO(app, logger=True)
+socketio = SocketIO(app, logger=True, async_mode="eventlet")
 connected_socket_ids = set()
 
-results = {}
+results: dict[str: CheckResult] = {}
 results_lock = Lock()
 
 '''
 Server functions
 '''
-
 
 # Creates a .cpp source code file from request body.
 def make_source_code_file(data: bytes, problem_id: int) -> tuple[str, str]:
@@ -33,10 +34,11 @@ def make_source_code_file(data: bytes, problem_id: int) -> tuple[str, str]:
 	return file_name, auth
 
 # Prints code result and puts int into the results holding dictionary.
-def print_code_result(result: dict, auth: str) -> None:
-	print(f"Results: {result}")
-	results[auth] = (dict(result), time.time())
-	print(len(results), "submissions are waiting")
+def print_code_result(result: CheckResult, auth: str) -> None:
+	with results_lock:
+		print(f"Results: {result}")
+		results[auth] = (result.as_dict(), time.time())
+		print(len(results), "submissions are waiting")
 
 # After RECEIVE_SUBMISSION_TIME seconds clears the result from results holding dictionary.
 def clean_results() -> None:
@@ -46,7 +48,6 @@ def clean_results() -> None:
 				if time.time() - results[res][1] >= RECEIVE_SUBMISSION_TIME:
 					results.pop(res)
 					print("Cleaning, left", len(results), "submissions")
-
 
 '''
 To be executed, after the server has started
@@ -93,37 +94,42 @@ def code_submission() -> Response:
 
 # Captures demo site request.
 @app.route('/', methods=["GET"])
-def send_index() -> tuple[str, int]:
-	c: str = ""
-	with open("index.html", "r") as f:
-		c = f.read()
-	return c, 200
+def send_index():
+	return render_template("index.html")
+
+# Captures demo site request.
+@app.route('/debugger', methods=["GET"])
+def send_debugger():
+	return render_template("debugger.html")
 
 # Captures request for submission results.
 @app.route('/status/<auth>', methods=["GET"])
 def get_task_results(auth: str) -> tuple[str, int]:
-	with results_lock:
-		res = results.get(auth, ({"percent": None, "first_failed": None, "time_limit_exceeded": False, "memory_limit_exceeded": False, "compilation_error": False, "invalid_problem_id": False, "unauthorized": True},0))
-		if not res[0]["unauthorized"]:
-			results.pop(auth)
-		return jsonify(res[0]), 200
+	res: tuple[str, int] = results.get(auth, (UnauthorizedCheckResult(), 0))
+	if not res[0].unauthorized:
+		results.pop(auth)
+	return jsonify(res[0].as_dict()), 200
 
 # Captures websocket connection for debugging.
 @socketio.on('connect')
 def handle_connect() -> None:
 	print(f"Client connected: {request.sid}")
-	connected_socket_ids.add(request.sid)
 
-# Captures websocket connection for debugging.
+# Captures websocket disconnection.
 @socketio.on('disconnect')
-def handle_connect() -> None:
+def handle_disconnect() -> None:
 	print(f"Client disconnected: {request.sid}")
-	connected_socket_ids.discard(request.sid) # If element is not inside connected_socket_ids, discard doesn't throw an error
+
+# Captures websocket debugging request.
+@socketio.on('start_debugging')
+def handle_debugging() -> None:
+	print(f"Client requested debugging: {request.sid}")
+	
 
 '''
 Running the server
 '''
 
 if __name__ == "__main__":
-	app.run(host=IP, port=PORT, threaded=True)
+	socketio.run(app, host=IP, port=PORT)
 	

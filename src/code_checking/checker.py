@@ -4,6 +4,7 @@ from typing import Callable, Any
 
 from .commands import Compiler
 from .pack_loader import PackLoader
+from .check_result import CheckResult
 import docker_manager.docker_response_status as DckStatus
 from docker_manager.manager import DockerManager
 
@@ -21,12 +22,12 @@ class Checker:
 
 		self.compiled_dir = self.compiler.output_dir
 
-		self.check_queue: list[tuple[str, int, str, Callable[[dict, str], None]]] = []
+		self.check_queue: list[tuple[str, int, str, Callable[[CheckResult, str], None]]] = []
 		
 		self.docker_manager = DockerManager(self.compiled_dir)
 		self.memory_limit_MB = 60
 
-	def push_check(self, filename: str, ex_id: int, auth: str, on_checked_func: Callable[[dict, str], None]) -> None:
+	def push_check(self, filename: str, ex_id: int, auth: str, on_checked_func: Callable[[CheckResult, str], None]) -> None:
 		"""
 		Push a file to the checking queue.
 		:param filename: Name of the file with source code that will be checked.
@@ -47,34 +48,36 @@ class Checker:
 				on_checked(result, auth)
 				del self.check_queue[0]
 				self.docker_manager.clear_images()
-				if result["compilation_error"]:
+				try:
 					os.remove(os.path.join(self.compiler.input_dir, filename))
+				except:
+					pass
 
-	def check(self, code_file: str, ex_id: int) -> dict[str, Any]:
+	def check(self, code_file: str, ex_id: int) -> CheckResult:
 		"""
 		Compiles and checks the code file. The file after checking.
 		:param code_file: File with source code that needs to be checked.
 		:param ex_id: ID of problem, that is being compiled and runned.
-		:return: Result dict containing "%" key with percentage of tests passed and
-		(if applies) "first_failed" with the first failed test.
+		:return: CheckResult class containing results information like
+		percent, compilation error etc.
 		"""
-		
+
 		score = 0
-		result = {
-			"percent": None, "first_failed": None,
-			"time_limit_exceeded": False, "memory_limit_exceeded": False, "compilation_error": False,
-			"invalid_problem_id": False, "unauthorized": False
-		}
+		result = CheckResult()
 
 		program = self.compiler.compile(code_file)
 		
 		if not os.path.exists(os.path.join(self.compiled_dir, program)):
-			result["compilation_error"] = True
+			result.compilation_error = True
 			return result
 		
 		status: str = ""
 		debuginfo: bytes = bytes()
 		status, debuginfo = self.docker_manager.build_for_checker(program)
+		
+		if status == DckStatus.docker_build_error:
+			os.remove(os.path.join(self.compiled_dir, program))
+			return result
 		
 		test_pack = self.pack_loader.load_bytes(ex_id)
 		pack_config = self.pack_loader.load_config(ex_id)
@@ -83,17 +86,17 @@ class Checker:
 			status, output = self.docker_manager.run_for_checker(input_=test_in.decode("utf-8"), memory_limit_MB=self.memory_limit_MB, timeout=pack_config['time_limit'])#subprocess.check_output(os.path.join(self.compiled_dir, program), input=test_in, timeout=pack_config['time_limit'])
 			
 			if status == DckStatus.timeout:
-				result["time_limit_exceeded"] = True
+				result.time_limit_exceeded = True
 			elif status == DckStatus.memory_limit_exceeded:
-				result["memory_limit_exceeded"] = True
+				result.memory_limit_exceeded = True
 
 			if status == "success" and output.decode()[:-1] == test_out.decode():
 				score += 1
 			else:
-				result["first_failed"] = test_in.decode("utf-8")
+				result.first_failed = test_in.decode("utf-8")
 				break
 
 		os.remove(os.path.join(self.compiled_dir, program))
 		os.remove(os.path.join(self.compiler.input_dir, code_file))
-		result["percent"] = (score / len(test_pack)) * 100
+		result.percentage = (score / len(test_pack)) * 100
 		return result
