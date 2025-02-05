@@ -49,7 +49,7 @@ class Checker:
 				del self.check_queue[0]
 				self.docker_manager.clear_images()
 				try:
-					os.remove(os.path.join(self.compiler.input_dir, filename))
+					os.remove(os.px`ath.join(self.compiler.input_dir, filename))
 				except:
 					pass
 
@@ -83,14 +83,14 @@ class Checker:
 		pack_config = self.pack_loader.load_config(ex_id)
 
 		for test_in, test_out in test_pack:
-			status, output = self.docker_manager.run_for_checker(input_=test_in.decode("utf-8"), memory_limit_MB=self.memory_limit_MB, timeout=pack_config['time_limit'])#subprocess.check_output(os.path.join(self.compiled_dir, program), input=test_in, timeout=pack_config['time_limit'])
+			status, output = self.docker_manager.run_for_checker(input_=test_in.decode("utf-8"), memory_limit_MB=self.memory_limit_MB, timeout=pack_config['time_limit'])
 			
 			if status == DckStatus.timeout:
 				result.time_limit_exceeded = True
 			elif status == DckStatus.memory_limit_exceeded:
 				result.memory_limit_exceeded = True
 
-			if status == "success" and output.decode()[:-1] == test_out.decode():
+			if status == DckStatus.success and output.decode()[:-1] == test_out.decode():
 				score += 1
 			else:
 				result.first_failed = test_in.decode("utf-8")

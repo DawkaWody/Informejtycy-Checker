@@ -124,7 +124,8 @@ def handle_disconnect() -> None:
 @socketio.on('start_debugging')
 def handle_debugging() -> None:
 	print(f"Client requested debugging: {request.sid}")
-	
+	auth = uuid4()
+	socketio.emit("started_debugging", {"auth": auth})
 
 '''
 Running the server
