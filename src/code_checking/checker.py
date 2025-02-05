@@ -49,7 +49,7 @@ class Checker:
 				del self.check_queue[0]
 				self.docker_manager.clear_images()
 				try:
-					os.remove(os.px`ath.join(self.compiler.input_dir, filename))
+					os.remove(os.path.join(self.compiler.input_dir, filename))
 				except:
 					pass
 
