@@ -6,7 +6,7 @@ from flask import Flask, request, Response, jsonify, copy_current_request_contex
 from flask_socketio import SocketIO, emit
 from uuid import uuid4
 
-from server import IP, PORT, RECEIVED_DIR, COMPILED_DIR, SECRET_KEY, RECEIVE_SUBMISSION_TIME
+from server import IP, PORT, RECEIVED_DIR, COMPILED_DIR, DEBUG_DIR, SECRET_KEY, RECEIVE_SUBMISSION_TIME
 from code_checking.checker import Checker
 from code_checking.check_result import CheckResult, UnauthorizedCheckResult
 from code_checking.pack_loader import PackLoader
@@ -17,8 +17,14 @@ app.config["SECRET_KEY"] = SECRET_KEY
 socketio = SocketIO(app, logger=True, async_mode="eventlet")
 connected_socket_ids = set()
 
+# For returning results on http://localhost/status/<auth>
+# Server gets the auth given in url and give corresponding CheckResult
 results: dict[str: CheckResult] = {}
 results_lock = Lock()
+
+# For debugging
+# Server use it to indentify debugging processes
+debug_processes: dict[str: Debugger]
 
 '''
 Server functions
@@ -56,7 +62,7 @@ To be executed, after the server has started
 # Setups server, after app.run() is called.
 with app.app_context():
 	pl = PackLoader('../tests', '.test', 'in', 'out', 'CONFIG')
-	compiler = Compiler('g++', RECEIVED_DIR, COMPILED_DIR)
+	compiler = Compiler('g++', RECEIVED_DIR, COMPILED_DIR, DEBUG_DIR)
 	checker = Checker(compiler, pl)
 	
 	lt = Thread(target=checker.listen)
