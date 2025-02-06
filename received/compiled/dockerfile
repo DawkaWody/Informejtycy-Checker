@@ -2,9 +2,9 @@
 
 FROM alpine:latest
 
-COPY 0_432626b7-0ae9-4c24-bc9b-566ef34791f7.out 0_432626b7-0ae9-4c24-bc9b-566ef34791f7.out
+COPY 0_3da56a4e-4e21-4407-abcb-8f9580d3e35e.out 0_3da56a4e-4e21-4407-abcb-8f9580d3e35e.out
 
 RUN apk add libc6-compat
 RUN apk add libstdc++ gcompat
 
-CMD [ "./0_432626b7-0ae9-4c24-bc9b-566ef34791f7.out" ]
+CMD [ "./0_3da56a4e-4e21-4407-abcb-8f9580d3e35e.out" ]

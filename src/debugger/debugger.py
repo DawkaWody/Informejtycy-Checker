@@ -1,20 +1,19 @@
 from uuid import uuid4
 
-from .commands import Compiler
+from code_checking.commands import Compiler
 
 class Debugger:
     '''
     Class for managing gdb process.
-    Because client stays on connection with debugger for a long time, there is double authentication.
-    First auth is static, in debug_processes dictionary, with mapped Debugger class to it.
-    Second is inside the class.
-    When socketio.emit, the second auth code is given, so that having first auth doesn't let you use Debugger.
-    The second auth is dynamic, after some time different is going to be send.
+    Firstly, the Debugger class is authenticated by the socket id.
+    Secondly, there is check for auth code given in the last emit.
     '''
 
-    def __init__(self, compiler: Compiler) -> None:
+    def __init__(self, compiler: Compiler, debug_dir: str) -> None:
         self.compiler = compiler
-        self.second_auth = uuid4()
+        self.debug_dir = debug_dir
+
+        self.auth: str = ""
 
     def run(self, code_file: str) -> None:
         '''
@@ -22,3 +21,16 @@ class Debugger:
         :param code_file: Path to the source code file that will be debugged
         '''
         pass
+
+    def get_next_auth(self, last_auth: str = "") -> str:
+        '''
+        Returns next uuid4 authentication code. If last authentication doesn't match current debugger one, then stop debugging.
+        :param last_auth: The last authentication code given by debugger
+        :return: uuid4 authentication code
+        '''
+        if last_auth != self.auth:
+            # Stop Debugging
+            return ""
+
+        self.auth = str(uuid4())
+        return self.auth

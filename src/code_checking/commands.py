@@ -27,10 +27,11 @@ class Compiler:
 		"""
 		target_filename = filename[:-3] + 'out'	 # file.cpp -> file.out
 
+		command = []
 		if not debug:
-			command = [self.compiler, "-o", join(self.debug_output_dir, target_filename), join(self.input_dir, filename)]
+			command = [self.compiler, join(self.input_dir, filename), "-o", join(self.output_dir, target_filename)]
 		else:
-			command = [self.compiler, "-g", "-o", join(self.output_dir, target_filename), join(self.input_dir, filename)]
+			command = [self.compiler, "-g", "-o", join(self.debug_output_dir, target_filename), join(self.input_dir, filename)]
 
-		subprocess.run(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 		return target_filename

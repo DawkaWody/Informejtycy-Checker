@@ -11,6 +11,7 @@ from code_checking.checker import Checker
 from code_checking.check_result import CheckResult, UnauthorizedCheckResult
 from code_checking.pack_loader import PackLoader
 from code_checking.commands import Compiler
+from debugger.debugger import Debugger
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
@@ -21,10 +22,6 @@ connected_socket_ids = set()
 # Server gets the auth given in url and give corresponding CheckResult
 results: dict[str: CheckResult] = {}
 results_lock = Lock()
-
-# For debugging
-# Server use it to indentify debugging processes
-debug_processes: dict[str: Debugger]
 
 '''
 Server functions
@@ -69,6 +66,10 @@ with app.app_context():
 	lt.start()
 	lt2 = Thread(target=clean_results)
 	lt2.start()
+
+	# For debugging
+	# Server use it to indentify debugging processes
+	app.config["debug_processes"]: dict[str: Debugger] = {}
 
 '''
 Flask & SocketIO functions
@@ -130,8 +131,10 @@ def handle_disconnect() -> None:
 @socketio.on('start_debugging')
 def handle_debugging() -> None:
 	print(f"Client requested debugging: {request.sid}")
-	auth = uuid4()
-	socketio.emit("started_debugging", {"auth": auth})
+	debuger_class = Debugger(compiler, DEBUG_DIR)
+	app.config["debug_processes"][str(request.sid)] = debuger_class
+	socketio.emit("started_debugging", {"auth": debuger_class.get_next_auth()})
+	print(app.config["debug_processes"])
 
 '''
 Running the server

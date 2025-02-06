@@ -64,7 +64,6 @@ class Checker:
 
 		score = 0
 		result = CheckResult()
-
 		program = self.compiler.compile(code_file)
 		
 		if not os.path.exists(os.path.join(self.compiled_dir, program)):

@@ -21,7 +21,7 @@ class DockerManager():
 			f.write(content)
 		
 		try:
-			stdout = subprocess.check_output(["sudo", "docker", "build", "-t", self.execution_image_name, self.compiled_dir])
+			stdout = subprocess.check_output(["docker", "build", "-t", self.execution_image_name, self.compiled_dir])
 			status = DckStatus.success
 		except:
 			status = DckStatus.docker_build_error
@@ -31,7 +31,7 @@ class DockerManager():
 	def run_for_checker(self, input_: str, memory_limit_MB: int, timeout: int) -> tuple[str, bytes]:
 		container_name = str(uuid4())
 
-		process = subprocess.Popen(["sudo", "docker", "run", "-m", f"{memory_limit_MB}m", "--name", container_name, self.execution_image_name], stdout=subprocess.PIPE)
+		process = subprocess.Popen(["docker", "run", "-m", f"{memory_limit_MB}m", "--name", container_name, self.execution_image_name], stdout=subprocess.PIPE)
 		
 		status = ""
 		stdout = bytes()
@@ -63,14 +63,14 @@ class DockerManager():
 		# is_running = is_running.replace(' ','').replace('\t','').replace('\n','').replace('\r','')
 		# print(is_running)
 		#
-		subprocess.run(["sudo", "docker", "kill", container_name])
+		subprocess.run(["docker", "kill", container_name])
 	
 	def clear_images(self) -> tuple[str, bytes]:
 		status = ""
 		stdout = bytes()
 		
 		try:
-			stdout = subprocess.check_output(["sudo", "docker", "system", "prune"], input='y'.encode('utf-8'))
+			stdout = subprocess.check_output(["docker", "system", "prune"], input='y'.encode('utf-8'))
 			status = DckStatus.success
 		except Exception as e:
 			status = DckStatus.server_error
