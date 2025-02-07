@@ -134,7 +134,6 @@ def handle_debugging() -> None:
 	debuger_class = Debugger(compiler, DEBUG_DIR)
 	app.config["debug_processes"][str(request.sid)] = debuger_class
 	socketio.emit("started_debugging", {"auth": debuger_class.get_next_auth()})
-	print(app.config["debug_processes"])
 
 '''
 Running the server
