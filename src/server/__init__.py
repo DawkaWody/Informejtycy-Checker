@@ -8,3 +8,5 @@ COMPILED_DIR: str = "../received/compiled"
 DEBUG_DIR: str = "../received/debug"
 SECRET_KEY: str = "gEe_5+aBG6;{4#X[bK^]k!w,mCLU-Mr"
 RECEIVE_SUBMISSION_TIME: int = 10
+CLEANING_RESULTS_TIME: int = 3
+CLEANING_UNUSED_DBG_PROCESSES_TIME: int = 5
