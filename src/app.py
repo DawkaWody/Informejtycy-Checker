@@ -2,7 +2,7 @@ import os
 import time
 import eventlet
 from threading import Thread, Lock
-from flask import Flask, request, Response, jsonify, copy_current_request_context, render_template
+from flask import Flask, request, Response, jsonify, copy_current_request_context, render_template, url_for, make_response, redirect
 from flask_socketio import SocketIO, emit
 from uuid import uuid4
 
@@ -145,7 +145,7 @@ def handle_disconnect() -> None:
 
 # Captures debugging request.
 @app.route('/debug', methods=["POST"])
-def handle_debugging() -> tuple[str, int]:
+def handle_debugging() -> Response:
 	print("POST request for debugging received")
 
 	auth = str(uuid4())
@@ -154,21 +154,9 @@ def handle_debugging() -> tuple[str, int]:
 	app.config["debug_processes"][auth] = debuger_class
 
 	return jsonify(
-		authorization=auth,
-		location="/static/debugger/view.html"
-	), 301
-
-# # Captures websocket debugging request.
-# @socketio.on('start_debugging')
-# def handle_debugging() -> None:
-# 	print(f"Client requested debugging: {request.sid}")
-#
-# 	auth = str(uuid4())
-#
-# 	debuger_class = Debugger(compiler, DEBUG_DIR)
-# 	app.config["debug_processes"][auth] = debuger_class
-#
-# 	socketio.emit("started_debugging", {"auth": auth})
+		where=url_for("static", filename="debugger/view.html"),
+		authorization=auth
+	), 202
 
 @socketio.on('debug_process_ping')
 def handle_ping(auth: str) -> None:

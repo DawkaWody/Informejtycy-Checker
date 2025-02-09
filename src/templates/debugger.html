@@ -4,21 +4,18 @@
 	<title>Demo website - debugger</title>
 
 	<link rel="preload" href="/static/debugger/style.css" as="style" onload="this.rel='stylesheet'">
-	<link rel="stylesheet" href="/static/debugger/prism.css">
-	<script src="static/debugger/prism.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.min.js"></script>
 </head>
 <body>
 	To jest demo debuggera.
 	
 	<div class="box">
-		<textarea id="debuggedCode" aria-label="Enter code to be debugged" rows="5"></textarea>
+		<textarea id="debugCode" aria-label="Enter code to be debugged" rows="5"></textarea>
 	</div>
 	
 	</br>
 	<button id="submissionButton">Start debugging</button>
 	
 	<script src="/static/debugger/before_running.js"></script>
-	
 </body>
 </html>
