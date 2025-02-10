@@ -1,1 +1,1 @@
-Ten folder trzyma template'y (czyli strony `.html`), które flask ładuje automatycznie, przy pomocy `flask.render_template()`.
+Ten folder trzyma index.html, czyli główną stronę, którą flask udostępni po wejściu na `http://localhost:5000` (później `http(s)://informejtycy.pl`).

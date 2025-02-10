@@ -6,14 +6,14 @@ from flask import Flask, request, Response, jsonify, copy_current_request_contex
 from flask_socketio import SocketIO, emit
 from uuid import uuid4
 
-from server import IP, PORT, RECEIVED_DIR, COMPILED_DIR, DEBUG_DIR, SECRET_KEY, RECEIVE_SUBMISSION_TIME, CLEANING_RESULTS_TIME, CLEANING_UNUSED_DBG_PROCESSES_TIME
+from server import IP, PORT, RECEIVED_DIR, COMPILED_DIR, DEBUG_DIR, SECRET_KEY, RECEIVE_SUBMISSION_TIME, RECEIVE_DEBUG_PING_TIME, CLEANING_RESULTS_TIME, CLEANING_UNUSED_DBG_PROCESSES_TIME
 from code_checking.checker import Checker
 from code_checking.check_result import CheckResult, UnauthorizedCheckResult
 from code_checking.pack_loader import PackLoader
 from code_checking.commands import Compiler
 from debugger.debugger import Debugger
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path="", static_folder="static/", template_folder="templates/")
 app.config["SECRET_KEY"] = SECRET_KEY
 socketio = SocketIO(app, logger=True, async_mode="eventlet")
 connected_socket_ids = set()
@@ -23,6 +23,7 @@ connected_socket_ids = set()
 results: dict[str: CheckResult] = {}
 results_lock = Lock()
 
+# To make sure app.config["debug_processes"] wouldn't be used by two processes in the same time
 debug_processes_lock = Lock()
 
 '''
@@ -50,7 +51,7 @@ def clean_results() -> None:
 	while True:
 		eventlet.sleep(CLEANING_RESULTS_TIME)
 		with results_lock:
-			for res in dict(results):
+			for res in dict(results): # dict(...) to make copy
 				if time.time() - results[res][1] >= RECEIVE_SUBMISSION_TIME:
 					results.pop(res)
 					print("Cleaning, left", len(results), "submissions")
@@ -59,9 +60,14 @@ def clean_results() -> None:
 def clean_unused_debug_processes() -> None:
 	while True:
 		eventlet.sleep(CLEANING_UNUSED_DBG_PROCESSES_TIME)
-		for auth in app.config["debug_processes"]:
-		    if app.config["debug_processes"][auth]:
-		        pass
+		with debug_processes_lock:
+			for auth in dict(app.config["debug_processes"]): # dict(...) to make copy
+				if time.time() - app.config["debug_processes"][auth].last_ping_time >= RECEIVE_DEBUG_PING_TIME:
+					print(f"Debug class with authorization '{auth}' wasn't pinged for {RECEIVE_DEBUG_PING_TIME} seconds")
+					print("This class is being cleaned...")
+					app.config["debug_processes"][auth].stop()
+					app.config["debug_processes"].pop(auth)
+					print(f"Cleaned successfully!")
 
 '''
 To be executed, after the server has started
@@ -98,7 +104,7 @@ def code_submission() -> tuple[str, int]:
 	problem_id = request.headers.get("Problem")
 	if not problem_id:
 		return "Problem id is missing", 404
-		
+
 	try:
 		problem_id = int(problem_id)
 	except:
@@ -120,11 +126,6 @@ def code_submission() -> tuple[str, int]:
 def send_index():
 	return render_template("index.html")
 
-# Captures demo site request.
-@app.route('/debugger', methods=["GET"])
-def send_debugger():
-	return render_template("debugger.html")
-
 # Captures request for submission results.
 @app.route('/status/<auth>', methods=["GET"])
 def get_task_results(auth: str) -> tuple[str, int]:
@@ -143,6 +144,28 @@ def handle_connect() -> None:
 def handle_disconnect() -> None:
 	print(f"Client disconnected: {request.sid}")
 
+@socketio.on('ping')
+def handle_debug_ping(data: dict[str: str]) -> None:
+	authorization = data["authorization"]
+	print(f"Client pinged debugger with authorization: {authorization}")
+	if authorization in app.config["debug_processes"]:
+		with debug_processes_lock:
+			app.config["debug_processes"][authorization].ping()
+			emit("pong", {"status": "ok"})
+	else:
+		emit("pong", {"status": "invalid auth"})
+
+# Captures websocket debugging request.
+@socketio.on('start_debugging')
+def handle_debugging() -> Response:
+	print(f"Client requested debugging: {request.sid}")
+
+	auth = str(uuid4())
+	debuger_class = Debugger(compiler, DEBUG_DIR)
+	app.config["debug_processes"][auth] = debuger_class
+
+	emit("started_debugging", {"authorization": auth})
+
 # Captures debugging request.
 @app.route('/debug', methods=["POST"])
 def handle_debugging() -> Response:
@@ -154,7 +177,6 @@ def handle_debugging() -> Response:
 	app.config["debug_processes"][auth] = debuger_class
 
 	return jsonify(
-		where=url_for("static", filename="debugger/view.html"),
 		authorization=auth
 	), 202
 

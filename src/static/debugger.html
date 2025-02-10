@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Demo website - debugger</title>
+
+	<link rel="preload" href="/debugger/style.css" as="style" onload="this.rel='stylesheet'">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.min.js"></script>
+</head>
+<body>
+	<div id="panelGorny">
+		<button id="zakonczDebugowanie" disabled=>Zakończ debugowanie</button>
+		<button id="krokDoPrzodu" disabled>Wykonaj kolejną linię</button>
+		<button id="krokDoPrzodu" disabled>Wejdź do funkcji</button>
+	</div>
+
+	To jest demo debuggera.
+	
+	<textarea id="debugCode" rows="10"></textarea>
+	
+	</br>
+	<button id="debugStart">Start debugging</button>
+	
+	<script src="/debugger/script.js"></script>
+</body>
+</html>

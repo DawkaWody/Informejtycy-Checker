@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Demo website</title>
+	<title>Demo website - główna</title>
 </head>
 <body>
 	To jest demo do testowania wysylania. Zeby uruchomic te strone, potrzebny jest modul flask w pythonie.
@@ -10,48 +10,10 @@
 	w odpowiedzi na klikniecie przycisku.
 	</br>
 	<button id="submissionButton">Submit solution</button>
-	
-	<script>
-		async function submission() {
-			const response = await fetch("/submit", {
-					method: "POST",
-					headers: {
-						"content-type": "text/plain",
-						"Problem": "0"
-					},
-					body: `
-#include<iostream>
-using namespace std;
-int main()
-{
-	cout << 15 << endl;
-}
-				`
-			});
-			const data = response.json();
-			if (data.ok) {
-				const result = checkStatus(data.authorization);
-				console.log(result);
-			}
-		}
-	
-		async function checkStatus(auth) {
-			const url = "http://localhost:5000/status/${auth}";
-			while (true) {
-				const response = await fetch(statusUrl);
-				const data = await response.json();
-				
-				if (!data.unauthorized) {
-					return data.percent;
-				}
-				
-				await new Promise(resolve => setTimeout(resolve, 1000));
-			}
-		}
-		
-		document.getElementById("submissionButton").addEventListener("click", () => {
-			submission();
-		});
-	</script>
+
+	</br>
+	<a href="/debugger.html">Demo debuggera</a>
+
+	<script src="static/index.js"></script>
 </body>
 </html>
