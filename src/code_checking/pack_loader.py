@@ -53,15 +53,13 @@ class PackLoader:
 		if index >= self.get_pack_count():
 			raise IndexError("Pack doesn't exist")
 
-		print(os.path.join(self.pack_dir_path, self.pack_files[index]))
 		with zipfile.ZipFile(os.path.join(self.pack_dir_path, self.pack_files[index])) as pack:
 			for i in range(len(pack.filelist) // 2):
-				# try:
-				print(i)
-				in_test = pack.read(self.in_name + str(i + 1))
-				out_test = pack.read(self.out_name + str(i + 1))
-				# except KeyError:
-					# raise WrongPackStructureError("Number of input files must match the number of output files.")
+				try:
+					in_test = pack.read(self.in_name + str(i + 1))
+					out_test = pack.read(self.out_name + str(i + 1))
+				except KeyError:
+					raise WrongPackStructureError("Number of input files must match the number of output files.")
 				tests.append((in_test, out_test))
 
 		return tests
@@ -82,8 +80,6 @@ class PackLoader:
 
 			conf["time_limit"] = int(settings[0])
 			conf["memory_limit"] = int(settings[1])
-
-		print(conf)
 
 		return conf
 

@@ -180,15 +180,6 @@ def handle_debugging() -> Response:
 		authorization=auth
 	), 202
 
-@socketio.on('debug_process_ping')
-def handle_ping(auth: str) -> None:
-	print(f"Client pings with authorization: {auth}")
-	if auth in app.config["debug_processes"]:
-		print("Authorization is valid")
-		app.config["debug_processes"][auth].last_ping_time = time.perf_counter()
-	else:
-		print("Authorization is invalid")
-
 '''
 Running the server
 '''

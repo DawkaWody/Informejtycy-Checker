@@ -1,18 +1,12 @@
 async function submission() {
+    console.log(document.getElementById("inputCode").value);
     const response = await fetch("/submit", {
             method: "POST",
             headers: {
                 "content-type": "text/plain",
                 "Problem": "0"
             },
-            body: `
-#include<iostream>
-using namespace std;
-int main()
-{
-cout << 15 << endl;
-}
-        `
+            body: document.getElementById("inputCode").value
     });
     const data = response.json();
     console.log(data);
