@@ -47,7 +47,7 @@ class Checker:
 				result = self.check(filename, ex_id)
 				on_checked(result, auth)
 				del self.check_queue[0]
-				self.docker_manager.clear_images()
+				self.docker_manager.clear_images() # Cleaning 'dundling' images
 				try:
 					os.remove(os.path.join(self.compiler.input_dir, filename))
 				except:
