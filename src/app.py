@@ -77,7 +77,7 @@ To be executed, after the server has started
 with app.app_context():
 	pl = PackLoader('../tests', '.test', 'in', 'out', 'CONFIG')
 	compiler = Compiler('g++', RECEIVED_DIR, COMPILED_DIR, DEBUG_DIR)
-	checker = Checker(compiler, pl)
+	checker = Checker(compiler, pl, DEBUG_DIR)
 	
 	lt = Thread(target=checker.listen) # Listens for checker queued elements
 	lt.start()

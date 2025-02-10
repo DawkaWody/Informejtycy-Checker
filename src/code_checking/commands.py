@@ -31,7 +31,7 @@ class Compiler:
 		if not debug:
 			command = [self.compiler, join(self.input_dir, filename), "-o", join(self.output_dir, target_filename)]
 		else:
-			command = [self.compiler, "-g", "-o", join(self.debug_output_dir, target_filename), join(self.input_dir, filename)]
+			command = [self.compiler, join(self.input_dir, filename), "-g", "-o", join(self.debug_output_dir, target_filename)]
 
 		subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 		return target_filename

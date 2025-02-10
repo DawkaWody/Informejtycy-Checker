@@ -10,11 +10,25 @@ class Debugger:
 	'''
 
 	def __init__(self, compiler: Compiler, debug_dir: str) -> None:
-		print("Debugger is being initialized")
 		self.compiler = compiler
 		self.debug_dir = debug_dir
 
 		self.last_ping_time: int = time.time() # time in seconds from the last time client pinged this class
+
+		self.gdb_init_input = [
+			"python",
+			"import sys",
+			"sys.path.insert(0, '/usr/share/gcc/python/')",
+			"from libstcxx.v6.printers import register_libstdcxx_printers",
+			"register_libstdcxx_printers(None)",
+			"end",
+			"set debuginfod enabled off",
+			"break main",
+			"run"
+		]
+
+		self.docker_manager = DockerManager(self.compiler.output_dir, debug_dir)
+		self.memory_limit_MB = 60
 
 	def ping(self) -> None:
 		'''
