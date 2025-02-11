@@ -178,24 +178,11 @@ def handle_debugging(data: dict[str: str]) -> Response:
 
 	debuger_class = GDBDebugger(compiler, DEBUG_DIR, file_name)
 	app.config["debug_processes"][auth] = debuger_class
+
 	if debuger_class.run() == -1:
 		emit("started_debugging", {"authorization": "", "compilation_error": True})
 	else:
 		emit("started_debugging", {"authorization": auth, "compilation_error": False})
-
-# Captures debugging request.
-@app.route('/debug', methods=["POST"])
-def handle_debugging() -> Response:
-	print("POST request for debugging received")
-
-	auth = str(uuid4())
-
-	debuger_class = Debugger(compiler, DEBUG_DIR)
-	app.config["debug_processes"][auth] = debuger_class
-
-	return jsonify(
-		authorization=auth
-	), 202
 
 '''
 Running the server
