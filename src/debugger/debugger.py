@@ -1,17 +1,19 @@
+import os
 import time
 from uuid import uuid4
 
 from code_checking.commands import Compiler
 
-class Debugger:
+class GDBDebugger:
 	'''
-	Class for managing debug process.
-	Either gdb or lldb should be used.
+	Class for managing debug process (gdb).
 	'''
 
-	def __init__(self, compiler: Compiler, debug_dir: str) -> None:
+	def __init__(self, compiler: Compiler, debug_dir: str, file_name: str) -> None:
 		self.compiler = compiler
+		self.received_dir = self.compiler.input_dir
 		self.debug_dir = debug_dir
+		self.file_name = file_name
 
 		self.last_ping_time: int = time.time() # time in seconds from the last time client pinged this class
 
@@ -27,8 +29,15 @@ class Debugger:
 			"run"
 		]
 
-		self.docker_manager = DockerManager(self.compiler.output_dir, debug_dir)
-		self.memory_limit_MB = 60
+		self.was_compiled: str = ""
+
+		#
+		# Currently, for purpose of testing, debugger is being runned without docker container.
+		# In the future, it should be changed, so that program can be debugged safely.
+		#
+		# self.docker_manager = DockerManager(self.compiler.output_dir, debug_dir)
+		# self.memory_limit_MB = 60
+		#
 
 	def ping(self) -> None:
 		'''
@@ -36,15 +45,23 @@ class Debugger:
 		'''
 		self.last_ping_time = time.time()
 
-	def run(self, code_file: str) -> None:
+	def run(self) -> int:
 		'''
-		Runs debug (gdb/lldb) process.
-		:param code_file: Path to the source code file that will be debugged
+		Runs debug process (gdb).
+		:param file_name: Path to the source code file that will be debugged
 		'''
-		pass
+		output_file_name = self.compiler.compile(self.file_name, debug=True)
+
+		if not os.path.exists(os.path.join(self.debug_dir, output_file_name)):
+			self.was_compiled = output_file_name
+			return -1
+
+		return 0
 
 	def stop(self) -> None:
 		'''
-		Stops debug (gdb/lldb) process and deinitalizes the class.
+		Stops debug process (gdb) and deinitalizes the class.
 		'''
-		pass
+		if self.was_compiled:
+			os.remove(os.path.join(self.debug_dir), self.was_compiled)
+		os.remove(os.path.join(self.received_dir, self.file_name))

@@ -8,6 +8,27 @@ const socket = io({
 const ping_back_after = 3000; // Delay before ping after server's PONG reponse
 var authorization = "";
 
+// Enable debugging gui and disable pre-debugging gui
+async function turn_gui_into_debugging() {
+    document.getElementById("debugCode").readOnly = true;
+    document.getElementById("debugStart").disabled = true;
+
+    await document.querySelectorAll("#panelGorny button").forEach((btn) => btn.disabled = false);
+}
+
+// Disable debugging gui and enable pre-debugging gui
+async function turn_gui_back_from_debugging() {
+    document.getElementById("debugCode").readOnly = false;
+    document.getElementById("debugStart").disabled = false;
+
+    await document.querySelectorAll("#panelGorny button").forEach((btn) => btn.disabled = true);
+}
+
+// Function to sleep in async function
+function sleep(time_in_miliseconds) {
+    return new Promise((resolve) => setTimeout(resolve, time_in_miliseconds));
+}
+
 // Connection debuginfo
 socket.on("connect", () => {
     console.log("Socket is connected!");
@@ -20,16 +41,19 @@ socket.on("disconnect", () => {
 
 // When server responds after start_debugging
 socket.on("started_debugging", (data) => {
-    auth = data.authorization;
-    console.log("Started debugging, auth", auth);
+    if (data.compilation_error) {
+        turn_gui_back_from_debugging();
+        document.getElementById("status").textContent = "błąd kompilacji! Przerywanie debugowania!";
+    } else {
+        turn_gui_into_debugging();
+        document.getElementById("status").textContent = "sukces. Rozpoczęto debugowanie!";
 
-    socket.emit("ping", {authorization: auth});
+        auth = data.authorization;
+        console.log("Started debugging, auth:", auth);
+
+        socket.emit("ping", {authorization: auth});
+    }
 })
-
-// Function to sleep in async function
-function sleep(time_in_miliseconds) {
-    return new Promise((resolve) => setTimeout(resolve, time_in_miliseconds));
-}
 
 // When server responds on pinging
 socket.on("pong", async (data) => {
@@ -43,13 +67,7 @@ socket.on("pong", async (data) => {
 
 // Start of debugging
 document.getElementById("debugStart").addEventListener("click", function start_debugging() {
-    document.getElementById("debugCode").readOnly = true;
-    document.getElementById("debugStart").disabled = true;
-
-    document.querySelectorAll("#panelGorny button").forEach((btn) => btn.disabled = false);
-
-    socket.emit("start_debugging")
+    socket.emit("start_debugging", {code: document.getElementById("debugCode").value});
 })
 
-// Disabling all debugging buttons
-document.querySelectorAll("#panelGorny button").forEach((btn) => btn.disabled = true);
+turn_gui_back_from_debugging()

@@ -11,7 +11,7 @@ from code_checking.checker import Checker
 from code_checking.check_result import CheckResult, UnauthorizedCheckResult
 from code_checking.pack_loader import PackLoader
 from code_checking.commands import Compiler
-from debugger.debugger import Debugger
+from debugger.debugger import GDBDebugger
 
 app = Flask(__name__, static_url_path="", static_folder="static/", template_folder="templates/")
 app.config["SECRET_KEY"] = SECRET_KEY
@@ -31,10 +31,18 @@ Server functions
 '''
 
 # Creates a .cpp source code file from request body.
-def make_source_code_file(data: bytes, problem_id: int) -> tuple[str, str]:
+def make_cpp_file_for_checker(data: bytes, problem_id: int) -> tuple[str, str]:
 	code = data.decode('utf-8')
 	auth = str(uuid4())
 	file_name = f"{problem_id}_{auth}.cpp"
+	with open(os.path.join(RECEIVED_DIR, file_name), 'w') as f:
+		f.write(code)
+	return file_name, auth
+
+# Creates a .cpp source code file for debugging
+def make_cpp_file_for_debugger(code: str) -> tuple[str, str]:
+	auth = str(uuid4())
+	file_name = f"{auth}.cpp"
 	with open(os.path.join(RECEIVED_DIR, file_name), 'w') as f:
 		f.write(code)
 	return file_name, auth
@@ -88,7 +96,7 @@ with app.app_context():
 
 	# For debugging
 	# Server use it to indentify debugging processes
-	app.config["debug_processes"]: dict[str: Debugger] = {}
+	app.config["debug_processes"]: dict[str: GDBDebugger] = {}
 
 	print(f"Server is running on {IP}:{PORT}")
 
@@ -113,7 +121,7 @@ def code_submission() -> tuple[str, int]:
 	if problem_id >= pl.get_pack_count():
 		return "Invalid problem id", 404
 
-	filename, auth = make_source_code_file(request.data, problem_id)
+	filename, auth = make_cpp_file_for_checker(request.data, problem_id)
 	checker.push_check(filename, problem_id, auth, print_code_result)
 	
 	return jsonify(
@@ -146,25 +154,34 @@ def handle_disconnect() -> None:
 
 @socketio.on('ping')
 def handle_debug_ping(data: dict[str: str]) -> None:
+	if not "authorization" in data:
+		return
+
 	authorization = data["authorization"]
 	print(f"Client pinged debugger with authorization: {authorization}")
+
 	if authorization in app.config["debug_processes"]:
 		with debug_processes_lock:
 			app.config["debug_processes"][authorization].ping()
 			emit("pong", {"status": "ok"})
-	else:
-		emit("pong", {"status": "invalid auth"})
 
 # Captures websocket debugging request.
 @socketio.on('start_debugging')
-def handle_debugging() -> Response:
+def handle_debugging(data: dict[str: str]) -> Response:
 	print(f"Client requested debugging: {request.sid}")
+	print(f"Data: {data}")
 
-	auth = str(uuid4())
-	debuger_class = Debugger(compiler, DEBUG_DIR)
+	if not "code" in data:
+		return
+
+	file_name, auth = make_cpp_file_for_debugger(data["code"])
+
+	debuger_class = GDBDebugger(compiler, DEBUG_DIR, file_name)
 	app.config["debug_processes"][auth] = debuger_class
-
-	emit("started_debugging", {"authorization": auth})
+	if debuger_class.run() == -1:
+		emit("started_debugging", {"authorization": "", "compilation_error": True})
+	else:
+		emit("started_debugging", {"authorization": auth, "compilation_error": False})
 
 # Captures debugging request.
 @app.route('/debug', methods=["POST"])
