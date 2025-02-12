@@ -1,6 +1,6 @@
 # Informejtycy-Checker
 
-System sprawdzający rozwiązania i debugger do strony informejtycy.pl
+System sprawdzający rozwiązania i debugger do strony informejtycy.pl. Serwer musi mieć zainstalowane zależności wymienione w `requirements.txt`.
 
 ## Uwaga do dockera nr 1
 

@@ -3,13 +3,10 @@ import time
 from pygdbmi.gdbcontroller import GdbController
 from uuid import uuid4
 from pprint import pprint
+from typing import Optional
 
 from code_checking.commands import Compiler
 
-# type: result -> can be skipped
-# type: log -> command, which was given
-# type: console -> gdb output for command
-# type: notify -> extra gdb output for command
 
 class GDBDebugger:
 	'''
@@ -37,15 +34,11 @@ class GDBDebugger:
 		]
 
 		self.compiled_file_name = ""
-		self.process: GdbController | None = None
+		self.process: Optional[pexpect.spawnu] = None
+		self.container_name: str = ""
 
-		#
-		# Currently, for purpose of testing, debugger is being runned without docker container.
-		# In the future, it should be changed, so that program can be debugged safely.
-		#
-		# self.docker_manager = DockerManager(self.compiler.output_dir, debug_dir)
-		# self.memory_limit_MB = 60
-		#
+		self.docker_manager = DockerManager(self.compiler.output_dir, debug_dir)
+		self.memory_limit_MB = 128
 
 	def ping(self) -> None:
 		'''
@@ -67,17 +60,11 @@ class GDBDebugger:
 			return -1
 
 		self.compiled_file_name = output_file_name
-		self.process = GdbController()
+		self.docker_manager.build_for_debugger(self.compiled_file_name)
 
-		response = self.process.write(f"file {os.path.join(self.debug_dir, output_file_name)}")
-		response = self.process.write(f"set debuginfod enabled off")
-		self.pprint_response(response)
-		response = self.process.write(f"break main")
-		self.pprint_response(response)
+		self.process, self.container_name, stdin_input_file = self.docker_manager.run_for_debugger("here_is_stdin", self.memory_limit_MB)
 
-		self.process.exit()
-		self.process = None
-
+		self.stop()
 		return 0
 
 	def stop(self) -> None:
@@ -86,4 +73,8 @@ class GDBDebugger:
 		'''
 		if self.compiled_file_name:
 			os.remove(os.path.join(self.debug_dir, self.compiled_file_name))
+			self.compiled_file_name = ""
 		os.remove(os.path.join(self.received_dir, self.file_name))
+
+		self.process.close(force=True)
+		self.process = None

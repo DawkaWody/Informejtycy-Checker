@@ -105,7 +105,7 @@ Flask & SocketIO functions
 '''
 
 # Captures code submissions.
-@app.route('/submit', methods=["POST"])
+@app.route('/checker/submit', methods=["POST"])
 def code_submission() -> tuple[str, int]:
 	print("POST request for code checking received")
 
@@ -135,7 +135,7 @@ def send_index():
 	return render_template("index.html")
 
 # Captures request for submission results.
-@app.route('/status/<auth>', methods=["GET"])
+@app.route('/checker/status/<auth>', methods=["GET"])
 def get_task_results(auth: str) -> tuple[str, int]:
 	res: tuple[str, int] = results.get(auth, (UnauthorizedCheckResult(), 0))
 	if not res[0].unauthorized:
@@ -190,4 +190,3 @@ Running the server
 
 if __name__ == "__main__":
 	socketio.run(app, host=IP, port=PORT)
-	

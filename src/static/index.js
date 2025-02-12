@@ -1,6 +1,6 @@
 async function submission() {
     console.log(document.getElementById("inputCode").value);
-    const response = await fetch("/submit", {
+    const response = await fetch("/checker/submit", {
             method: "POST",
             headers: {
                 "content-type": "text/plain",
