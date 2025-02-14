@@ -6,12 +6,14 @@ System sprawdzający rozwiązania i debugger do strony informejtycy.pl. Serwer m
 
 ## Przed uruchomieniem na serwerze
 
+**UWAGA:** aby wykonać poniższe czynności automatycznie, skorzystaj ze skrytpu `setup.sh` poprzez komendę `sudo ./setup.sh`.
+
 Zanim serwer zostanie uruchomiony, należy wykonać szereg czynności.
 
-- Odświeżenie bazy danych apt: `sudo apt-get update && sudo apt-get upgrade`;
-- Pobranie narzędzi: `python (>=3.11)`, `gcc`, `docker`, `cgroup-tools`;
+- Odświeżenie baz danych i pakietów instalatorów: `sudo apt-get update && sudo apt-get upgrade && sudo snap refresh`;
+- Pobranie narzędzi: `python (>=3.11)`, `python3-pip`, `gcc`, `docker`;
 - Zainstalowanie wymaganych bibliotek pythona (lista w `requirements.txt`);
-- Utworzenie grupy `docker` (patrz [docker bez sudo](#Docker-bez-sudo));
+- Utworzenie grupy `docker` (**UWAGA:** przed utworzeniem grupy `cgroup`) (patrz [docker bez sudo](#Docker-bez-sudo));
 - Utworzenie grupy `cgroup` (patrz [tworzenie grupy cgroup](#Tworzenie-grupy-cgroup));
 
 ## Docker bez sudo <a name="Docker-bez-sudo"></a>
@@ -24,7 +26,7 @@ sudo usermod -aG docker $USER
 reboot -f
 ```
 
-**Ostatnia komenda zresetuje system, aby zmiany zostały zastosowane.** Teraz, aby sprawdzić czy wszystko działa, należy wpisać:
+**Ostatnia komenda uruchomi ponownie komputer, aby zmiany zostały zastosowane.** Teraz, aby sprawdzić czy wszystko działa, należy wpisać:
 
 ```bash
 docker ps
