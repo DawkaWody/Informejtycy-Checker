@@ -62,7 +62,7 @@ def print_code_result(result: CheckResult, auth: str) -> None:
 	with results_lock:
 		results[auth] = (result.as_dict(), time.time())
 
-		logger.info(f"Results: {result}", print_code_result)
+		logger.spam(f"Results: {result}", print_code_result)
 		logger.spam(f"{len(results)} submissions are waiting", print_code_result)
 
 # After RECEIVE_SUBMISSION_TIME seconds clears the result from results holding dictionary.
@@ -98,15 +98,19 @@ def main() -> None:
 # Setups server, after app.run() is called.
 with app.app_context():
 	pl = PackLoader('../tests', '.test', 'in', 'out', 'CONFIG')
-	compiler = Compiler('g++', RECEIVED_DIR, COMPILED_DIR, DEBUG_DIR)
+	compiler = Compiler(logger, 'g++', RECEIVED_DIR, COMPILED_DIR, DEBUG_DIR)
 	checker = Checker(logger, compiler, pl, DEBUG_DIR, GDB_PRINTERS_DIR)
 	
+	logger.debug("Starting cleaning processes")
+
 	lt = Thread(target=checker.listen) # Listens for checker queued elements
 	lt.start()
 	lt2 = Thread(target=clean_results) # Listens for cleaning results from dictionary, which are on /status/<auth>
 	lt2.start()
 	lt3 = Thread(target=clean_unused_debug_processes)
 	lt3.start()
+
+	logger.debug(f"Cleaning processes have started", main)
 
 	# For debugging
 	# Server use it to indentify debugging processes
@@ -121,7 +125,7 @@ Flask & SocketIO functions
 # Captures code submissions.
 @app.route('/checker/submit', methods=["POST"])
 def code_submission() -> tuple[str, int]:
-	logger.info("POST request for code checking received", code_submission)
+	logger.debug("POST request for code checking received", code_submission)
 
 	problem_id = request.headers.get("Problem")
 	if not problem_id:
@@ -159,12 +163,12 @@ def get_task_results(auth: str) -> tuple[str, int]:
 # Captures websocket connection for debugging.
 @socketio.on('connect')
 def handle_connect() -> None:
-	logger.info(f"Client connected: {request.sid}", handle_connect)
+	logger.debug(f"Client connected: {request.sid}", handle_connect)
 
 # Captures websocket disconnection.
 @socketio.on('disconnect')
 def handle_disconnect() -> None:
-	logger.info(f"Client disconnected: {request.sid}", handle_disconnect)
+	logger.debug(f"Client disconnected: {request.sid}", handle_disconnect)
 
 @socketio.on('ping')
 def handle_debug_ping(data: dict[str: str]) -> None:
@@ -184,7 +188,7 @@ def handle_debug_ping(data: dict[str: str]) -> None:
 # Captures websocket debugging request.
 @socketio.on('start_debugging')
 def handle_debugging(data: dict[str: str]) -> Response:
-	logger.info(f"Client requested debugging: {request.sid}", handle_debugging)
+	logger.debug(f"Client requested debugging: {request.sid}", handle_debugging)
 	logger.debug(f"Data: {data}", handle_debugging)
 
 	if not "code" in data or not "input" in data:

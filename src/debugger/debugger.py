@@ -75,6 +75,7 @@ class GDBDebugger:
 		self.logger.spam(f"{stdout}", self.run)
 
 		if status in [DckStatus.docker_build_error, DckStatus.internal_docker_manager_error]:
+			self.logger.alert(f"Building error: {status}", self.run)
 			return -2
 
 		self.process, self.container_name, stdin_input_file = self.docker_manager.run_for_debugger(input_, self.memory_limit_MB)

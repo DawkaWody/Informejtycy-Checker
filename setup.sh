@@ -24,4 +24,4 @@ systemctl set-property $dbgslice CPUQuota=$contcpu
 groupadd docker
 usermod -aG docker $USER
 
-echo "Please reboot the system from another shell (or GUI) to activate docker group."
+echo "Please reboot the system from another shell (or with GUI) to activate docker group."

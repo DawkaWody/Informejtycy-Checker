@@ -88,8 +88,9 @@ class Checker:
 		self.logger.debug(f"docker build checker: {status}", self.check)
 		self.logger.spam(f"{debuginfo}", self.check)
 
-		if status == DckStatus.docker_build_error:
+		if status in [DckStatus.docker_build_error, DckStatus.internal_docker_manager_error]:
 			os.remove(os.path.join(self.compiled_dir, program))
+			self.logger.alert(f"Building error: {status}")
 			return result
 		
 		test_pack = self.pack_loader.load_bytes(ex_id)

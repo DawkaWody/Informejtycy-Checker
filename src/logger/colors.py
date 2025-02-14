@@ -6,11 +6,11 @@ class Color:
     SPAM_ID = 0
     DEBUG = "\033[38:5:207m"
     DEBUG_ID = 1
-    INFO = "\033[38:5:27m"
-    INFO_ID = 2
     WARNING = "\033[38:5:99m"
-    WARNING_ID = 3
+    WARNING_ID = 2
     ALERT = "\033[38:5:214m"
-    ALERT_ID = 4
+    ALERT_ID = 3
     ERROR = "\033[38:5:160m"
-    ERROR_ID = 5
+    ERROR_ID = 4
+    INFO = "\033[38:5:27m"
+    INFO_ID = 5
