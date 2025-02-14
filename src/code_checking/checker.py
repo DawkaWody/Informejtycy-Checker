@@ -2,30 +2,33 @@ import os
 import subprocess
 from typing import Callable, Any
 
+import docker_manager.docker_response_status as DckStatus
 from .commands import Compiler
 from .pack_loader import PackLoader
 from .check_result import CheckResult
-import docker_manager.docker_response_status as DckStatus
 from docker_manager.manager import DockerManager
+from logger import Logger
 
 class Checker:
 	"""
 	Main code checking class. Checks everything in check_queue.
 	"""
-	def __init__(self, compiler: Compiler, pack_loader: PackLoader, debug_dir: str):
+	def __init__(self, logger: Logger, compiler: Compiler, pack_loader: PackLoader, debug_dir: str, gdb_printers_dir: str):
 		"""
 		:param compiler: Compiler instance
 		:param pack_loader: Pack loader instance
 		"""
+		self.logger = logger
 		self.compiler = compiler
 		self.pack_loader = pack_loader
 
 		self.compiled_dir = self.compiler.output_dir
 		self.debug_dir = debug_dir
+		self.gdb_printers_dir = gdb_printers_dir
 
 		self.check_queue: list[tuple[str, int, str, Callable[[CheckResult, str], None]]] = []
 		
-		self.docker_manager = DockerManager(self.compiled_dir, self.debug_dir)
+		self.docker_manager = DockerManager(self.compiled_dir, self.debug_dir, self.gdb_printers_dir)
 
 	def push_check(self, filename: str, ex_id: int, auth: str, on_checked_func: Callable[[CheckResult, str], None]) -> None:
 		"""
@@ -47,7 +50,11 @@ class Checker:
 				result = self.check(filename, ex_id)
 				on_checked(result, auth)
 				del self.check_queue[0]
-				print(f"Cleaning with `docker system prune`: {self.docker_manager.clear_images()[0]}") # Cleaning 'dundling' images
+
+				status, stdout = self.docker_manager.clear_images() # Cleaning 'dundling' images
+				self.logger.debug(f"docker system prune: {status}", self.listen)
+				self.logger.spam(f"{stdout}", self.listen)
+
 				try:
 					os.remove(os.path.join(self.compiler.input_dir, filename))
 				except:
@@ -62,6 +69,8 @@ class Checker:
 		percent, compilation error etc.
 		"""
 
+		self.logger.debug(f"Compiling solution for: {ex_id}", self.check)
+
 		score = 0
 		result = CheckResult()
 		program = self.compiler.compile(code_file)
@@ -70,9 +79,14 @@ class Checker:
 			result.compilation_error = True
 			return result
 		
+		self.logger.debug(f"Building docker container", self.check)
+
 		status: str = ""
 		debuginfo: bytes = bytes()
 		status, debuginfo = self.docker_manager.build_for_checker(program)
+
+		self.logger.debug(f"docker build checker: {status}", self.check)
+		self.logger.spam(f"{debuginfo}", self.check)
 
 		if status == DckStatus.docker_build_error:
 			os.remove(os.path.join(self.compiled_dir, program))

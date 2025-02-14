@@ -5,17 +5,19 @@ from threading import Thread, Lock
 from flask import Flask, request, Response, jsonify, copy_current_request_context, render_template, url_for, make_response, redirect
 from flask_socketio import SocketIO, emit
 from uuid import uuid4
+from sys import modules
 
-from server import IP, PORT, RECEIVED_DIR, COMPILED_DIR, DEBUG_DIR, SECRET_KEY, RECEIVE_SUBMISSION_TIME, RECEIVE_DEBUG_PING_TIME, CLEANING_RESULTS_TIME, CLEANING_UNUSED_DBG_PROCESSES_TIME
+from server import IP, PORT, RECEIVED_DIR, COMPILED_DIR, DEBUG_DIR, GDB_PRINTERS_DIR, SECRET_KEY, RECEIVE_SUBMISSION_TIME, RECEIVE_DEBUG_PING_TIME, CLEANING_RESULTS_TIME, CLEANING_UNUSED_DBG_PROCESSES_TIME
 from code_checking.checker import Checker
 from code_checking.check_result import CheckResult, UnauthorizedCheckResult
 from code_checking.pack_loader import PackLoader
 from code_checking.commands import Compiler
 from debugger.debugger import GDBDebugger
+from logger import Logger
 
 app = Flask(__name__, static_url_path="", static_folder="static/", template_folder="templates/")
 app.config["SECRET_KEY"] = SECRET_KEY
-socketio = SocketIO(app, logger=True, async_mode="eventlet")
+socketio = SocketIO(app, async_mode="eventlet")
 connected_socket_ids = set()
 
 # For returning results on http://localhost/status/<auth>
@@ -25,6 +27,14 @@ results_lock = Lock()
 
 # To make sure app.config["debug_processes"] wouldn't be used by two processes in the same time
 debug_processes_lock = Lock()
+
+# To nicely display messages
+logger = Logger(display_logs=True)
+
+# Make sure received directory exists
+os.makedirs(RECEIVED_DIR, exist_ok=True)
+os.makedirs(COMPILED_DIR, exist_ok=True)
+os.makedirs(DEBUG_DIR, exist_ok=True)
 
 '''
 Server functions
@@ -50,9 +60,10 @@ def make_cpp_file_for_debugger(code: str) -> tuple[str, str]:
 # Prints code result and puts int into the results holding dictionary.
 def print_code_result(result: CheckResult, auth: str) -> None:
 	with results_lock:
-		print(f"Results: {result}")
 		results[auth] = (result.as_dict(), time.time())
-		print(len(results), "submissions are waiting")
+
+		logger.info(f"Results: {result}", print_code_result)
+		logger.spam(f"{len(results)} submissions are waiting", print_code_result)
 
 # After RECEIVE_SUBMISSION_TIME seconds clears the result from results holding dictionary.
 def clean_results() -> None:
@@ -62,7 +73,7 @@ def clean_results() -> None:
 			for res in dict(results): # dict(...) to make copy
 				if time.time() - results[res][1] >= RECEIVE_SUBMISSION_TIME:
 					results.pop(res)
-					print("Cleaning, left", len(results), "submissions")
+					logger.spam(f"Cleaning, left {len(results)} submissions", clean_results)
 
 # Cleans debug processes from app.config["debug_processes"], if they wasn't pinged for a long time
 def clean_unused_debug_processes() -> None:
@@ -71,21 +82,24 @@ def clean_unused_debug_processes() -> None:
 		with debug_processes_lock:
 			for auth in dict(app.config["debug_processes"]): # dict(...) to make copy
 				if time.time() - app.config["debug_processes"][auth].last_ping_time >= RECEIVE_DEBUG_PING_TIME:
-					print(f"Debug class with authorization '{auth}' wasn't pinged for {RECEIVE_DEBUG_PING_TIME} seconds")
-					print("This class is being cleaned...")
+					logger.spam(f"GDBDebugger with '{auth}' wasn't pinged for {RECEIVE_DEBUG_PING_TIME} seconds. Cleaning...", clean_unused_debug_processes)
 					app.config["debug_processes"][auth].stop()
 					app.config["debug_processes"].pop(auth)
-					print(f"Cleaned successfully!")
+					logger.spam(f"Cleaned successfully!", clean_unused_debug_processes)
 
 '''
 To be executed, after the server has started
 '''
 
+# For logger, in case something is logged outside of function scope
+def main() -> None:
+	pass
+
 # Setups server, after app.run() is called.
 with app.app_context():
 	pl = PackLoader('../tests', '.test', 'in', 'out', 'CONFIG')
 	compiler = Compiler('g++', RECEIVED_DIR, COMPILED_DIR, DEBUG_DIR)
-	checker = Checker(compiler, pl, DEBUG_DIR)
+	checker = Checker(logger, compiler, pl, DEBUG_DIR, GDB_PRINTERS_DIR)
 	
 	lt = Thread(target=checker.listen) # Listens for checker queued elements
 	lt.start()
@@ -98,7 +112,7 @@ with app.app_context():
 	# Server use it to indentify debugging processes
 	app.config["debug_processes"]: dict[str: GDBDebugger] = {}
 
-	print(f"Server is running on {IP}:{PORT}")
+	logger.info(f"Server is running on {IP}:{PORT}", main)
 
 '''
 Flask & SocketIO functions
@@ -107,7 +121,7 @@ Flask & SocketIO functions
 # Captures code submissions.
 @app.route('/checker/submit', methods=["POST"])
 def code_submission() -> tuple[str, int]:
-	print("POST request for code checking received")
+	logger.info("POST request for code checking received", code_submission)
 
 	problem_id = request.headers.get("Problem")
 	if not problem_id:
@@ -145,12 +159,12 @@ def get_task_results(auth: str) -> tuple[str, int]:
 # Captures websocket connection for debugging.
 @socketio.on('connect')
 def handle_connect() -> None:
-	print(f"Client connected: {request.sid}")
+	logger.info(f"Client connected: {request.sid}", handle_connect)
 
 # Captures websocket disconnection.
 @socketio.on('disconnect')
 def handle_disconnect() -> None:
-	print(f"Client disconnected: {request.sid}")
+	logger.info(f"Client disconnected: {request.sid}", handle_disconnect)
 
 @socketio.on('ping')
 def handle_debug_ping(data: dict[str: str]) -> None:
@@ -158,31 +172,44 @@ def handle_debug_ping(data: dict[str: str]) -> None:
 		return
 
 	authorization = data["authorization"]
-	print(f"Client pinged debugger with authorization: {authorization}")
+	logger.spam(f"Client pinged debugger with authorization: {authorization}", handle_debug_ping)
 
 	if authorization in app.config["debug_processes"]:
 		with debug_processes_lock:
 			app.config["debug_processes"][authorization].ping()
 			emit("pong", {"status": "ok"})
 
+			logger.spam(f"Emitted \"pong\" to {request.sid}", handle_debug_ping)
+
 # Captures websocket debugging request.
 @socketio.on('start_debugging')
 def handle_debugging(data: dict[str: str]) -> Response:
-	print(f"Client requested debugging: {request.sid}")
-	print(f"Data: {data}")
+	logger.info(f"Client requested debugging: {request.sid}", handle_debugging)
+	logger.debug(f"Data: {data}", handle_debugging)
 
-	if not "code" in data:
+	if not "code" in data or not "input" in data:
 		return
 
 	file_name, auth = make_cpp_file_for_debugger(data["code"])
 
-	debuger_class = GDBDebugger(compiler, DEBUG_DIR, file_name)
-	app.config["debug_processes"][auth] = debuger_class
+	debugger_class = GDBDebugger(logger, compiler, DEBUG_DIR, GDB_PRINTERS_DIR, file_name)
+	app.config["debug_processes"][auth] = debugger_class
 
-	if debuger_class.run() == -1:
+	run_exit_code = debugger_class.run(data["input"])
+	if run_exit_code == -1:
 		emit("started_debugging", {"authorization": "", "compilation_error": True})
+		logger.spam(f"Emitted \"start_debugging\" (with compilation_error) to {request.sid}", handle_debugging)
+
+	elif run_exit_code == -2:
+		emit("stopped_debugging")
+		logger.spam(f"Emitted \"stopped_debugging\" to {request.sid}", handle_debugging)
+
 	else:
 		emit("started_debugging", {"authorization": auth, "compilation_error": False})
+		logger.spam(f"Emitted \"start_debugging\" to {request.sid}", handle_debugging)
+
+	logger.debug("Stopping docker class", handle_debugging)
+	debugger_class.stop()
 
 '''
 Running the server

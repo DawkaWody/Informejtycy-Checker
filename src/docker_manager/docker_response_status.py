@@ -1,5 +1,6 @@
 success = "Success"
 docker_build_error = "DockerBuildError"
+internal_docker_manager_error = "InternalDockerManagerError"
 memory_limit_exceeded = "MemoryLimitExceeded"
 runtime_error = "RuntimeError"
 timeout = "Timeout"

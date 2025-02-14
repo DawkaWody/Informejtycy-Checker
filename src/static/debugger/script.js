@@ -67,7 +67,7 @@ socket.on("pong", async (data) => {
 
 // Start of debugging
 document.getElementById("debugStart").addEventListener("click", function start_debugging() {
-    socket.emit("start_debugging", {code: document.getElementById("debugCode").value});
+    socket.emit("start_debugging", {code: document.getElementById("debugCode").value, input: ""});
 })
 
 turn_gui_back_from_debugging()
