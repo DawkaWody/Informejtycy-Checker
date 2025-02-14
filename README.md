@@ -64,7 +64,7 @@ cat /sys/fs/cgroup/informejtycy_debugger.slice/cgroup.controllers # Powinniśmy 
 cat /sys/fs/cgroup/informejtycy_debugger.slice/cpu.max # Powinniśmy otrzymać dwie liczby, gdzie pierwsza jest mniejsza od drugiej
 ```
 
-## Uwaga do dockera nr 1 <a name="Uwaga-do-docera-nr-1"></a>
+## Uwaga do dockera nr 1 <a name="Uwaga-do-dockera-nr-1"></a>
 
 Należy zignorować pojawiające się w konsoli informacje typu `can't kill container ...` - sprawdzarka próbuje zatrzymać kontener dockera, na wypadek, gdyby użytkownik podał nieskończoną pętle. Wtedy informacji takiej nie będzie, bo znajdzie się kontener do wyłączenia. W innym wypadku, pojawia się wspomniany "błąd".
 
