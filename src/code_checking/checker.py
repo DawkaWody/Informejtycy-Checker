@@ -13,7 +13,7 @@ class Checker:
 	"""
 	Main code checking class. Checks everything in check_queue.
 	"""
-	def __init__(self, logger: Logger, compiler: Compiler, pack_loader: PackLoader, debug_dir: str, gdb_printers_dir: str):
+	def __init__(self, logger: Logger, compiler: Compiler, pack_loader: PackLoader):
 		"""
 		:param compiler: Compiler instance
 		:param pack_loader: Pack loader instance
@@ -23,12 +23,10 @@ class Checker:
 		self.pack_loader = pack_loader
 
 		self.compiled_dir = self.compiler.output_dir
-		self.debug_dir = debug_dir
-		self.gdb_printers_dir = gdb_printers_dir
 
 		self.check_queue: list[tuple[str, int, str, Callable[[CheckResult, str], None]]] = []
 		
-		self.docker_manager = DockerManager(self.compiled_dir, self.debug_dir, self.gdb_printers_dir)
+		self.docker_manager = DockerManager(self.compiled_dir)
 
 	def push_check(self, filename: str, ex_id: int, auth: str, on_checked_func: Callable[[CheckResult, str], None]) -> None:
 		"""
@@ -90,7 +88,7 @@ class Checker:
 
 		if status in [DckStatus.docker_build_error, DckStatus.internal_docker_manager_error]:
 			os.remove(os.path.join(self.compiled_dir, program))
-			self.logger.alert(f"Building error: {status}")
+			self.logger.alert(f"Building error: {status}", self.check)
 			return result
 		
 		test_pack = self.pack_loader.load_bytes(ex_id)
