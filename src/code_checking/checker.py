@@ -53,10 +53,10 @@ class Checker:
 				self.logger.debug(f"docker system prune: {status}", self.listen)
 				self.logger.spam(f"{stdout}", self.listen)
 
-				try:
-					os.remove(os.path.join(self.compiler.input_dir, filename))
-				except:
-					pass
+				# try:
+				# 	# os.remove(os.path.join(self.compiler.input_dir, filename))
+				# except:
+				# 	pass
 
 	def check(self, code_file: str, ex_id: int) -> CheckResult:
 		"""

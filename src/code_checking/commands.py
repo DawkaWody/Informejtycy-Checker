@@ -30,8 +30,10 @@ class Compiler:
 		command = [self.compiler, join(self.input_dir, filename), "-o", join(self.output_dir, target_filename)]
 
 		try:
-			subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+			print(subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout) # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 		except FileNotFoundError:
 			self.logger.alert(f"{self.compiler} compiler is not installed!", self.compile)
+		except Exception as e:
+			self.logger.alert(f"Compilation failed: {e}", self.compile)
 
 		return target_filename

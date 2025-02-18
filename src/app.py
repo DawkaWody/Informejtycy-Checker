@@ -16,12 +16,7 @@ from logger import Logger
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
-socketio = SocketIO(app, async_mode="eventlet")
-
-# For returning results on http://localhost/status/<auth>
-# Server gets the auth given in url and give corresponding CheckResult
-results: dict[str: CheckResult] = {}
-results_lock = Lock()
+socketio = SocketIO(app, async_mode="eventlet", logger=True, engineio_logger=True)
 
 # To nicely display messages
 logger = Logger(display_logs=True)
@@ -29,6 +24,9 @@ logger = Logger(display_logs=True)
 # Make sure received directory exists
 os.makedirs(RECEIVED_DIR, exist_ok=True)
 os.makedirs(COMPILED_DIR, exist_ok=True)
+
+results: dict[str: tuple[str, int]] = {}
+results_lock = Lock()
 
 '''
 Server functions
@@ -53,6 +51,7 @@ def print_code_result(result: CheckResult, auth: str) -> None:
 
 # After RECEIVE_SUBMISSION_TIME seconds clears the result from results holding dictionary.
 def clean_results() -> None:
+	global results
 	while True:
 		eventlet.sleep(CLEANING_RESULTS_TIME)
 		with results_lock:
@@ -118,10 +117,10 @@ def code_submission() -> tuple[str, int]:
 # Captures request for submission results.
 @app.route('/checker/status/<auth>', methods=["GET"])
 def get_task_results(auth: str) -> tuple[str, int]:
-	res: tuple[str, int] = results.get(auth, (UnauthorizedCheckResult(), 0))
-	if not res[0].unauthorized:
+	res: tuple[str, int] = results.get(auth, (UnauthorizedCheckResult().as_dict(), 0))
+	if not res[0]["unauthorized"]:
 		results.pop(auth)
-	return jsonify(res[0].as_dict()), 200
+	return jsonify(res[0]), 200
 	
 '''
 Running the server
@@ -129,3 +128,21 @@ Running the server
 
 if __name__ == "__main__":
 	socketio.run(app, host=IP, port=PORT)
+
+# curl --location '127.0.0.1:5000/checker/submit' \
+# --header 'Problem: 0' \
+# --data '#include <iostream>
+# #include <vector>
+# #include <numeric>
+# using namespace std;
+# int main()
+# {
+#     int n; cin >> n;
+#     int suma = 0;
+#     while (n--) {
+#         int x; cin >> x;
+#         suma += x;
+#     }
+#     cout << suma << '\n';
+#     return 0;
+# }'
