@@ -16,7 +16,7 @@ from logger import Logger
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
-socketio = SocketIO(app, async_mode="eventlet", logger=True, engineio_logger=True)
+socketio = SocketIO(app, async_mode="eventlet")
 
 # To nicely display messages
 logger = Logger(display_logs=True)
@@ -128,21 +128,3 @@ Running the server
 
 if __name__ == "__main__":
 	socketio.run(app, host=IP, port=PORT)
-
-# curl --location '127.0.0.1:5000/checker/submit' \
-# --header 'Problem: 0' \
-# --data '#include <iostream>
-# #include <vector>
-# #include <numeric>
-# using namespace std;
-# int main()
-# {
-#     int n; cin >> n;
-#     int suma = 0;
-#     while (n--) {
-#         int x; cin >> x;
-#         suma += x;
-#     }
-#     cout << suma << '\n';
-#     return 0;
-# }'

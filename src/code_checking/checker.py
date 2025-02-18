@@ -53,10 +53,10 @@ class Checker:
 				self.logger.debug(f"docker system prune: {status}", self.listen)
 				self.logger.spam(f"{stdout}", self.listen)
 
-				# try:
-				# 	# os.remove(os.path.join(self.compiler.input_dir, filename))
-				# except:
-				# 	pass
+				try:
+					os.remove(os.path.join(self.compiler.input_dir, filename))
+				except:
+					pass
 
 	def check(self, code_file: str, ex_id: int) -> CheckResult:
 		"""
@@ -95,7 +95,7 @@ class Checker:
 		pack_config = self.pack_loader.load_config(ex_id)
 
 		for test_in, test_out in test_pack:
-			status, output = self.docker_manager.run_for_checker(input_=test_in.decode("utf-8"), memory_limit_MB=pack_config["memory_limit"], timeout=pack_config['time_limit'])
+			status, output = self.docker_manager.run_for_checker(input_=test_in, memory_limit_MB=pack_config['memory_limit'], timeout=pack_config['time_limit'])
 
 			if status == DckStatus.timeout:
 				result.time_limit_exceeded = True
