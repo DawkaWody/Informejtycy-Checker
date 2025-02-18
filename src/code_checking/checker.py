@@ -102,7 +102,7 @@ class Checker:
 			elif status == DckStatus.memory_limit_exceeded:
 				result.memory_limit_exceeded = True
 
-			if status == DckStatus.success and output.decode()[:-1] == test_out.decode():
+			if status == DckStatus.success and output.decode() == test_out.decode():
 				score += 1
 			else:
 				result.first_failed = test_in.decode("utf-8")
