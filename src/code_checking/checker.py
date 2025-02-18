@@ -8,7 +8,10 @@ from .pack_loader import PackLoader
 from .check_result import CheckResult
 from docker_manager.manager import DockerManager
 from logger import Logger
+import re
 
+def normalize(s):
+    return re.sub(r'\s+', ' ', s).strip()
 class Checker:
 	"""
 	Main code checking class. Checks everything in check_queue.
@@ -102,7 +105,7 @@ class Checker:
 			elif status == DckStatus.memory_limit_exceeded:
 				result.memory_limit_exceeded = True
 
-			if status == DckStatus.success and output.decode() == test_out.decode():
+			if status == DckStatus.success and normalize(output.decode()) == normalize(test_out.decode()):
 				score += 1
 			else:
 				result.first_failed = test_in.decode("utf-8")
