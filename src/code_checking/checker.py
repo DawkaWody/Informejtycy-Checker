@@ -12,6 +12,7 @@ import re
 
 def normalize(s):
     return re.sub(r'\s+', ' ', s).strip()
+
 class Checker:
 	"""
 	Main code checking class. Checks everything in check_queue.
