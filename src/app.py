@@ -13,10 +13,12 @@ from code_checking.check_result import CheckResult, UnauthorizedCheckResult
 from code_checking.pack_loader import PackLoader
 from code_checking.commands import Compiler
 from logger import Logger
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
 socketio = SocketIO(app, async_mode="eventlet")
+CORS(app)
 
 # To nicely display messages
 logger = Logger(display_logs=True)
