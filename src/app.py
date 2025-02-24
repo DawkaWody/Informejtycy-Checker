@@ -72,7 +72,7 @@ def main() -> None:
 
 # Setups server, after app.run() is called.
 with app.app_context():
-	pl = PackLoader('../tests', '.test', 'in', 'out', 'CONFIG')
+	pl = PackLoader(logger, '../tests', '.test', 'in', 'out', 'CONFIG')
 	compiler = Compiler(logger, 'g++', RECEIVED_DIR, COMPILED_DIR)
 	checker = Checker(logger, compiler, pl)
 	

@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 from typing import Callable, Any
 
@@ -8,7 +9,6 @@ from .pack_loader import PackLoader
 from .check_result import CheckResult
 from docker_manager.manager import DockerManager
 from logger import Logger
-import re
 
 def normalize(s):
     return re.sub(r'\s+', ' ', s).strip()
