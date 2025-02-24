@@ -68,7 +68,7 @@ class PackLoader:
 					self.logger.alert("Number of input files must match the number of output files.", self.load_bytes)
 					tests.append((b"", b""))
 				except Exception as e:
-					self.logger.error("Challenge Complete! How Did We Get Here? | {e.__class__.__name}: {e}", self.load_bytes)
+					self.logger.error(f"Challenge Complete! How Did We Get Here? | {e.__class__.__name}: {e}", self.load_bytes)
 					tests.append((b"", b""))
 
 		return tests
@@ -92,6 +92,6 @@ class PackLoader:
 			except ValueError:
 				self.logger.alert("Time or memory limit is not an integer.", self.load_config)
 			except Exception as e:
-				self.logger.error("Challenge Complete! How Did We Get Here? | {e.__class__.__name}: {e}", self.load_config)
+				self.logger.error(f"Challenge Complete! How Did We Get Here? | {e.__class__.__name}: {e}", self.load_config)
 
 		return conf
