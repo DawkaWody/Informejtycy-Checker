@@ -27,7 +27,7 @@ class Compiler:
 		"""
 		target_filename = filename[:-3] + 'out'	 # file.cpp -> file.out
 
-		command = [self.compiler, join(self.input_dir, filename), "-o", join(self.output_dir, target_filename)]
+		command = [self.compiler, join(self.input_dir, filename), "-O2", "--std=c++23", "-o", join(self.output_dir, target_filename)]
 
 		try:
 			subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
