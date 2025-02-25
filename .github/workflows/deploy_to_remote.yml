@@ -1,0 +1,25 @@
+name: Deploy to remote server
+
+on:
+  push:
+    paths:
+      - 'src/**'
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+
+        - name: Deploy to remote server
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.REMOTE_HOST }}
+            username: inft
+            password: ${{ secrets.REMOTE_PASSWORD }}
+            script: |
+                cd /home/inft/INFORMEJTYCY-PL
+                echo "${{ secrets.REMOTE_PASSWORD }}" | sudo -S bash deploy_checker.sh
