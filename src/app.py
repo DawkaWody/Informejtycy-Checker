@@ -21,8 +21,8 @@ socketio = SocketIO(app, async_mode="eventlet")
 CORS(app)
 
 # To nicely display messages
-sys.stdout.reconfigure(line_buffering=True)
-sys.stderr.reconfigure(line_buffering=True)
+sys.stdout.reconfigure(encoding='utf-8', line_buffering=True)
+sys.stderr.reconfigure(encoding='utf-8', line_buffering=True)
 logger = Logger(display_logs=True)
 
 # Make sure received directory exists
