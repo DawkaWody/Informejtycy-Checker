@@ -1,11 +1,11 @@
 import os
 import time
 import eventlet
+import sys
 from threading import Thread, Lock
 from flask import Flask, request, Response, jsonify, copy_current_request_context, render_template, url_for, make_response, redirect
 from flask_socketio import SocketIO, emit
 from uuid import uuid4
-from sys import modules
 
 from server import IP, PORT, RECEIVED_DIR, COMPILED_DIR, SECRET_KEY, RECEIVE_SUBMISSION_TIME, RECEIVE_DEBUG_PING_TIME, CLEANING_RESULTS_TIME, CLEANING_UNUSED_DBG_PROCESSES_TIME
 from code_checking.checker import Checker
@@ -21,6 +21,8 @@ socketio = SocketIO(app, async_mode="eventlet")
 CORS(app)
 
 # To nicely display messages
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
 logger = Logger(display_logs=True)
 
 # Make sure received directory exists
