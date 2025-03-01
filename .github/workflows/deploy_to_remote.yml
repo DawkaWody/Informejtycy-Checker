@@ -1,9 +1,7 @@
 name: Deploy to remote server
 
 on:
-  push:
-    paths:
-      - 'src/**'
+  push
 
 jobs:
   deploy:
