@@ -93,7 +93,7 @@ class PackLoader:
 				
 				conf["time_limit"] = int(settings[0])
 				conf["memory_limit"] = int(settings[1])
-			except KeyError:
+			except IndexError:
 				if self.logger is None:
 					raise Exception("Config file is not present.")
 				self.logger.alert("Config file is not present.", self.load_config)
