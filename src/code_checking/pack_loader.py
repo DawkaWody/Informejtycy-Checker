@@ -55,6 +55,8 @@ class PackLoader:
 		
 		tests = []
 		if index >= self.get_pack_count():
+			if self.logger is None:
+				raise Exception(f"Given pack index {index} doesn't exists")
 			self.logger.alert(f"Given pack index {index} doesn't exists", self.load_bytes)
 			return [(b"", b"")]
 
@@ -65,10 +67,14 @@ class PackLoader:
 					out_test = pack.read(self.out_name + str(i + 1))
 					tests.append((in_test, out_test))
 				except KeyError:
+					if self.logger is None:
+						raise Exception("Number of input files must match the number of output files.")
 					self.logger.alert("Number of input files must match the number of output files.", self.load_bytes)
 					tests.append((b"", b""))
 				except Exception as e:
-					self.logger.error(f"Challenge Complete! How Did We Get Here? | {e.__class__.__name}: {e}", self.load_bytes)
+					if self.logger is None:
+						raise Exception(f"Challenge Complete! How Did We Get Here? | {e.__class__.__name__}: {e}")
+					self.logger.error(f"Challenge Complete! How Did We Get Here? | {e.__class__.__name__}: {e}", self.load_bytes)
 					tests.append((b"", b""))
 
 		return tests
@@ -88,10 +94,16 @@ class PackLoader:
 				conf["time_limit"] = int(settings[0])
 				conf["memory_limit"] = int(settings[1])
 			except KeyError:
+				if self.logger is None:
+					raise Exception("Config file is not present.")
 				self.logger.alert("Config file is not present.", self.load_config)
 			except ValueError:
+				if self.logger is None:
+					raise Exception("Time or memory limit is not an integer.")
 				self.logger.alert("Time or memory limit is not an integer.", self.load_config)
 			except Exception as e:
-				self.logger.error(f"Challenge Complete! How Did We Get Here? | {e.__class__.__name}: {e}", self.load_config)
+				if self.logger is None:
+					raise Exception(f"Challenge Complete! How Did We Get Here? | {e.__class__.__name__}: {e}")
+				self.logger.error(f"Challenge Complete! How Did We Get Here? | {e.__class__.__name__}: {e}", self.load_config)
 
 		return conf
