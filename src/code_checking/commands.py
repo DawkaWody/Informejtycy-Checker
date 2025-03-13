@@ -30,8 +30,10 @@ class Compiler:
 		command = [self.compiler, join(self.input_dir, filename), "-O2", "--std=c++23", "-o", join(self.output_dir, target_filename)]
 
 		try:
-			subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+			subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=8)
 		except FileNotFoundError:
 			self.logger.alert(f"{self.compiler} compiler is not installed!", self.compile)
+		except:
+			pass
 
 		return target_filename
