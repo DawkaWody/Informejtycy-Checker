@@ -10,8 +10,8 @@ def check(from_: int, to: int, all_tests: list[str]) -> None:
 
     for i in range(from_, to):
         print(f"Test: {all_tests[i]}")
-        pack_loader.load_bytes(i)
-        pack_loader.load_config(i)
+        print(str(pack_loader.load_bytes(i))[:50])
+        print(pack_loader.load_config(i))
 
 def main() -> int:
     global pack_loader
@@ -26,8 +26,8 @@ def main() -> int:
 
         test_all = input("Czy chcesz sprawdzić wszystkie testy? [t/n] ")
         if not test_all in 'tn':
-            print("Toż Ci mówie ~~idioto~~, że 't' lub 'n' co mie tu jakieś głupoty wpisujesz")
-            print("czytać nie umiesz czy z premedytacją testujesz mój kod, hę?")
+            print("Toż Ci mówie ~~idioto~~, że 't' lub 'n' co mie tu jakieś głupoty wypisujesz")
+            print("Czytać nie umiesz czy z premedytacją testujesz mój kod, hę?")
             return -2
         
         if test_all == 't':

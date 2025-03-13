@@ -76,7 +76,9 @@ class PackLoader:
 						raise Exception(f"Challenge Complete! How Did We Get Here? | {e.__class__.__name__}: {e}")
 					self.logger.error(f"Challenge Complete! How Did We Get Here? | {e.__class__.__name__}: {e}", self.load_bytes)
 					tests.append((b"", b""))
-
+		
+		if len(tests) == 0:
+			return [(b"", b"")]
 		return tests
 
 	def load_config(self, index: int) -> dict[str, int]:
@@ -86,6 +88,12 @@ class PackLoader:
 		:return: Dictionary with time limit and memory limit
 		"""
 		conf = {"time_limit": 3, "memory_limit": 60}
+
+		if index >= self.get_pack_count():
+			if self.logger is None:
+				raise Exception(f"Given pack index {index} doesn't exists")
+			self.logger.alert(f"Given pack index {index} doesn't exists", self.load_config)
+			return conf
 
 		with zipfile.ZipFile(os.path.join(self.pack_dir_path, self.pack_files[index])) as pack:
 			try:
